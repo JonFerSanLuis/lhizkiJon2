@@ -1,0 +1,59 @@
+      .mobile-footer {
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        background: linear-gradient(to top, #ffffff 0%, #fafbfc 100%);
+        z-index: 1050;
+        height: 80px;
+        padding: 8px 0;
+        border-top: 1px solid rgba(28, 176, 246, 0.1);
+      }
+      .mobile-footer .footer-btn {
+        border: none;
+        background: transparent;
+        color: #6b7280;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 8px 16px;
+        flex: 1;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        gap: 4px;
+      }
+      .mobile-footer .footer-btn i {
+        font-size: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .mobile-footer .footer-btn:hover {
+        color: #1CB0F6;
+        transform: translateY(-2px);
+      }
+      .mobile-footer .footer-btn:active {
+        transform: translateY(0);
+      }
+      .mobile-footer .footer-btn.active {
+        color: #1CB0F6;
+      }
+      .mobile-footer .footer-btn.active i {
+        transform: scale(1.1);
+      }
+      .mobile-footer .footer-btn.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #1CB0F6 0%, #0d8ecf 100%);
+        border-radius: 0 0 3px 3px;
+      }
+      .mobile-footer .footer-btn .btn-label {
+        margin-top: 2px;
+        letter-spacing: 0.3px;
+      }
+      @media (max-width: 767.98px) {
+        body { padding-bottom: 92px; }
+      }

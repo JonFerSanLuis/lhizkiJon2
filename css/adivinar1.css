@@ -1,0 +1,33 @@
+header{
+    background-color: rgb(255, 255, 255);
+}
+/* Estilos para corazones de vidas */
+
+/* Corazón con contorno rojo (estado por defecto - relleno) */
+.life-heart {
+    color: #ff6b6b;
+    -webkit-text-stroke: 1.5px #d32f2f;
+    text-stroke: 1.5px #d32f2f;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+/* Corazón relleno - mantienes el relleno rojo */
+.life-heart.filled {
+    color: #ff6b6b;
+}
+
+/* Corazón vacío - solo contorno, sin relleno */
+.life-heart.empty {
+    color: transparent;
+    -webkit-text-stroke: 2px #ff6b6b;
+    text-stroke: 2px #ff6b6b;
+}
+
+/* Corazón perdido - gris */
+.life-heart.lost {
+    color: #9e9e9e;
+    -webkit-text-stroke: 1.5px #757575;
+    text-stroke: 1.5px #757575;
+    opacity: 0.6;
+}

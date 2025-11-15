@@ -1,0 +1,255 @@
+body{
+    color: white;
+}
+
+header{
+    background-color: #1CB0F6;
+}
+
+/* Book icon styles */
+header .fas.fa-book-open {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+a{
+    text-decoration: none ;
+    color: #FFB98A;
+}
+
+.form-button {
+    width: 69% !important;
+    padding: 0.75rem 1rem !important;
+}
+
+/* Acercar el h3 al logo */
+header {
+    position: relative;
+    background-color: #1CB0F6;
+}
+
+header h3 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 80%; 
+    margin: 0;
+}
+
+/* Button container styles */
+.button-container {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    background-color: #e9ecef;
+    border-radius: 50px;
+    width: 80%;
+    min-height: 30px;
+}
+
+.btn-custom {
+    border: none;
+    color: #6c757d;
+    background-color: transparent;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s ease;
+    flex: 1;
+}
+
+.btn-custom:hover {
+    color: #333;
+    background-color: transparent;
+}
+
+.btn-custom.active {
+    color: #333;
+    font-weight: 600;
+}
+
+.button-slider {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    width: calc(50% - 0.375rem);
+    height: calc(100% - 0.5rem);
+    background-color: white;
+    border-radius: 50px;
+    transition: transform 0.3s ease;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-custom[data-button="sartu"]:hover ~ .button-slider {
+    transform: translateX(0);
+}
+
+.btn-custom[data-button="erregistratu"]:hover ~ .button-slider {
+    transform: translateX(calc(100% + 0.75rem));
+}
+
+/* custom green button styles */
+.btn-success {
+    background-color: #1CB0F6 !important;
+    border-color: #1CB0F6 !important;
+    color: white !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #1CB0F6 !important;
+    border-color: #1CB0F6 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+/* login section spacing */
+#login-section {
+    margin-bottom: 1rem;
+    transition: opacity 0.3s ease, transform 0.3s ease !important;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* register section styling */
+#register-section {
+    margin-bottom: 1rem;
+    transition: opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+/* Form sections positioning */
+.form-sections-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#login-section, #register-section {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Initially show login section */
+#login-section {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* Initially hide register section */
+#register-section {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+    pointer-events: none;
+}
+
+/* Form labels styling - make them visible on white background */
+.form-inputs-container label {
+    color: #333 !important;
+    font-weight: 600;
+}
+
+/* Links in forms */
+a.color-green {
+    color: #1CB0F6 !important;
+}
+
+/* Estilos para indicador de carga en selects */
+.form-control:disabled {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.loading-option {
+    font-style: italic;
+    color: #6c757d !important;
+}
+
+/* Animación sutil para el emoji de carga */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.form-control:disabled option {
+    animation: pulse 1.5s infinite;
+}
+
+/* Estilos para el indicador de carga en el registro */
+.loading-option {
+    color: #6c757d !important;
+    font-style: italic;
+}
+
+select.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Opcional: Efecto adicional para el select mientras carga */
+select.loading:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #80bdff;
+}
+
+/* Responsive adjustments for mobile - inputs and buttons full width */
+@media (max-width: 576px) {
+    /* Make form inputs container take almost full width on mobile */
+    .form-inputs-container {
+        max-width: 95% !important;
+        padding: 0 1rem;
+    }
+    
+    /* Make form buttons take almost full width on mobile */
+    .form-button {
+        width: 89% !important;
+        max-width: 95% !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Adjust form sections for mobile */
+    #login-section, #register-section {
+        padding: 0 1rem;
+        max-width: 100% !important;
+    }
+    
+    /* Reduce form sections container padding on mobile */
+    .form-sections-container {
+        padding: 0 1rem;
+    }
+}
+
+/* Tablet adjustments - medium width */
+@media (min-width: 577px) and (max-width: 768px) {
+    .form-inputs-container {
+        max-width: 400px;
+    }
+    
+    .form-button {
+        width: auto;
+        padding: 0.75rem 2rem;
+    }
+}
+
+/* Desktop adjustments - smaller width */
+@media (min-width: 769px) {
+    .form-inputs-container {
+        max-width: 350px;
+    }
+    
+    .form-button {
+        width: auto;
+        padding: 0.75rem 2rem;
+    }
+}

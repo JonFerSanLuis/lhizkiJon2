@@ -1,0 +1,156 @@
+ul,li{list-style: none;}
+
+body{
+    background-color: #d4d4d4;
+}
+header{
+    background-color: #3A4A61;
+}
+.text-purple{ color: #6F42C1; }
+.text-green{ color: #198754; }
+.text-blue{ color: #0D6EFD; }
+.text-yellow{ color: #FFC107; }
+
+/* Dashboard styles */
+.stat-card{
+    border: none;
+    border-radius: 12px;
+}
+
+.bg-gradient-purple{ background: linear-gradient(135deg,#e9d7ff 0%, #d6c5ff 100%); }
+.bg-gradient-blue{ background: linear-gradient(135deg,#cce7ff 0%, #b6e3ff 100%); }
+.bg-gradient-green{ background: linear-gradient(135deg,#d7f7e6 0%, #bff0d0 100%); }
+.bg-gradient-yellow{ background: linear-gradient(135deg,#fff4d0 0%, #ffe3a3 100%); }
+
+
+   /* Asegura que el wrapper muestre el gradiente y permita scroll horizontal */
+.table-responsive.bg-gradient-blue {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    overflow: auto;
+}
+
+table.bg-gradient-blue {
+      background-color: transparent;
+      color: inherit;
+}
+table.text-blue{
+    color: #0D6EFD;
+}
+
+table.bg-gradient-blue th,
+    table.bg-gradient-blue td {
+      background-color: transparent !important;
+      color: inherit;
+      white-space: nowrap; /* evita quiebre inesperado en columnas */
+    }
+
+/* Bootstrap aplica fondos a th/td; los hacemos transparentes */
+
+ tbody .action-list li{
+    display: inline-block;
+    margin: 0 5px;
+}
+
+.table th,
+.table td {
+    text-align: left;        /* alineación horizontal por defecto */
+    vertical-align: middle;  /* alinea contenido verticalmente */
+}
+
+/* Centrar columnas específicas: 1ª (ID) y última (Acciones) */
+/*.table thead th:nth-child(1),
+.table tbody td:nth-child(1) {
+    text-align: center;
+    width: 70px; 
+}
+
+.table thead th:last-child,
+.table tbody td:last-child {
+    text-align: center;
+    width: 140px; 
+}*/
+
+.role-item{ padding: .8rem 1rem; }
+.bg-role-purple{ background: linear-gradient(90deg,#f3e8ff,#efe6ff); }
+.bg-role-green{ background: linear-gradient(90deg,#e6fff2,#dff7ec); }
+.bg-role-blue{ background: linear-gradient(90deg,#e9f7ff,#e6f3ff); }
+
+/* small adjustments to cards */
+.card { border-radius: 12px; }
+
+/* make font-awesome icons align nicely */
+.fa-2x{ opacity: .95 }
+
+.pagination{ margin: 0; }
+.pagination li a{
+    background-color: transparent;
+    border: 2px solid transparent;
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 31px;
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    margin: 0 3px;
+    border-radius: 50px;
+    transition: all 0.3s ease 0s;
+}
+.pagination li a:hover{
+    background-color: transparent;
+    border-color: rgba(255,255,255,0.2);
+}
+.pagination li a:focus,
+.pagination li.active a,
+.pagination li.active a:hover{
+ 
+    background-color: transparent;
+    border-color: #0a57ca;
+}
+.pagination li:first-child a,
+.pagination li:last-child a{
+    border-radius: 50%;
+}
+
+.table th, .table td { white-space: nowrap; }
+    @media (max-width: 576px) {
+        .table th, .table td { white-space: normal; font-size: .95rem; }
+}
+
+.nav.nav-pills .nav-link {
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+  border-radius: .35rem;
+  color: rgba(255,255,255,.9);
+  position: relative;
+  padding: .45rem .75rem;
+}
+
+/* línea animada debajo del item */
+.nav.nav-pills .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg,#7fb3ff,#2b6fd6);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width .18s ease;
+}
+.table th,
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Keep specific widths for better layout */
+.table thead th:nth-child(1),
+.table tbody td:nth-child(1) {
+    width: 70px;
+}
+.table thead th:last-child,
+.table tbody td:last-child {
+    width: 140px;
+}

@@ -1,0 +1,356 @@
+:root {
+  /* Colores de la guía de estilos */
+  --sky-blue: #1cb0f6;
+  --sky-blue-light: #8ad6ff;
+  --sky-blue-dark: #0e8ac9;
+  --purple: #ce82ff;
+  --purple-light: #e4b5ff;
+  --purple-dark: #a855f7;
+  --green: #58cc02;
+  --orange: #ff9600;
+  --red: #ff4b4b;
+  --gold: #ffc800;
+  --white: #ffffff;
+  --gray-50: #f7f7f7;
+  --gray-200: #e5e5e5;
+  --gray-800: #3c3c3c;
+
+  /* Tipografía */
+  --font-family: system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.mobile-container {
+  min-height: 100vh;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: var(--white);
+  position: relative;
+  padding-bottom: 80px;
+}
+
+/* Header con gradiente púrpura inspirado en los wireframes */
+.header-historial {
+  background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+  padding: 24px 20px 32px;
+  color: var(--white);
+  position: relative;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  transition: opacity 0.2s;
+}
+
+.btn-back:hover {
+  opacity: 0.8;
+  color: var(--white);
+}
+
+.header-title {
+  font-size: 36px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Contenido principal con espaciado generoso */
+.historial-content {
+  padding: 24px 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  background: linear-gradient(180deg, var(--gray-50) 0%, var(--white) 100%);
+  border-radius: 16px;
+  margin: 24px 0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  color: var(--gray-800);
+  opacity: 0.7;
+  margin: 0;
+}
+
+/* Sección de ranking */
+.ranking-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Tarjetas de ranking individuales estilo Duolingo */
+.ranking-card {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ranking-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--purple-light);
+}
+
+.ranking-card-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+/* Iconos de trofeos con colores de gamificación */
+.trophy-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.trophy-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, #ffd700 100%);
+  box-shadow: 0 4px 12px rgba(255, 200, 0, 0.4);
+}
+
+.trophy-silver {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+}
+
+.trophy-bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #e5a168 100%);
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.game-date {
+  font-size: 14px;
+  color: var(--gray-800);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-badge {
+  background: var(--green);
+  color: var(--white);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ranking-card-right {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.score-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--purple-dark);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.score-label {
+  font-size: 13px;
+  color: var(--gray-800);
+  opacity: 0.6;
+  font-weight: 500;
+}
+
+/* Detalles expandibles del juego */
+.game-details {
+  background: var(--gray-50);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: -4px;
+  border: 2px solid var(--gray-200);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 13px;
+  color: var(--gray-800);
+  opacity: 0.6;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.detail-success {
+  color: var(--green);
+}
+
+.detail-error {
+  color: var(--red);
+}
+
+.detail-percentage {
+  color: var(--sky-blue);
+}
+
+/* Responsive para móviles pequeños */
+@media (max-width: 400px) {
+  .header-historial {
+    padding: 20px 16px 28px;
+  }
+
+  .header-title {
+    font-size: 28px;
+  }
+
+  .ranking-card {
+    padding: 12px;
+  }
+
+  .trophy-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .game-title {
+    font-size: 16px;
+  }
+
+  .score-value {
+    font-size: 24px;
+  }
+
+  .game-details {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Animaciones sutiles */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ranking-card {
+  animation: slideIn 0.3s ease forwards;
+}
+
+.ranking-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.ranking-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.ranking-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.ranking-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.ranking-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
