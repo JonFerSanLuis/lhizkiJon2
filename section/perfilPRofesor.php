@@ -3,6 +3,30 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../model/AccesoBD.php';
+
+$bd_juegos = new AccesoBD();
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'cambiar_estado_juego') {
+    
+    $id_juego_para_cambiar = $_POST['id_juego'];
+    
+    // si el checkbox esta marcado, $_POST['juego_activo'] existirá (y tendra valor "1").
+    // si no está marcado, no existira.
+    
+    $nuevo_estado = 2; // 2 = inactivo (por defecto)
+    if (isset($_POST['juego_activo'])) {
+        $nuevo_estado = 1; // 1 = Activo
+    }
+    
+    $bd_juegos->actualizarEstadoJuego($id_juego_para_cambiar, $nuevo_estado);
+    
+    // recargar la página
+    echo "<meta http-equiv='refresh' content='0'>";
+}
+
+$lista_de_juegos = $bd_juegos->obtenerTodosLosJuegos();
+
+$bd_juegos->cerrarConexion();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -23,7 +47,7 @@ require_once __DIR__ . '/../model/AccesoBD.php';
 
         <?php
         $id_centro = $_SESSION['id_centro'] ?? null;
-        $bd = new AccesoBD();
+        $bd = new AccesoBD(); // Esta es la conexión original del archivo
         $stats = [
             'num_alumnos' => 0,
             'porcentaje_participacion' => 0,
@@ -58,22 +82,59 @@ require_once __DIR__ . '/../model/AccesoBD.php';
             </div>
         </div>
 
-        <!-- Lista de alumnos -->
+
+        <div class="content-section mb-4">
+            <div class="section-title">
+                <i class="bi bi-controller"></i>
+                Jokoak Kudeatu (Gestionar Juegos)
+            </div>
+            
+            <?php if (count($lista_de_juegos) > 0): ?>
+                <div class="list-group">
+                    <?php foreach ($lista_de_juegos as $juego): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1"><?= htmlspecialchars($juego['titulo']) ?></h5>
+                                <small><?= htmlspecialchars($juego['descripcion'] ?? 'Sin descripción') ?></small>
+                            </div>
+                            
+                            <form method="POST" action="perfilPRofesor.php" style="margin: 0;">
+                                <input type="hidden" name="accion" value="cambiar_estado_juego">
+                                <input type="hidden" name="id_juego" value="<?= $juego['id_juego'] ?>">
+                                
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           role="switch" 
+                                           id="juego_<?= $juego['id_juego'] ?>"
+                                           name="juego_activo"  value="1" <?php if ($juego['id_estado'] == 1) echo 'checked'; // Marcar si es 1 (Activo) ?>
+                                           onchange="this.form.submit()"> <label class="form-check-label" for="juego_<?= $juego['id_juego'] ?>"></label>
+                                </div>
+                            </form>
+                            
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-info">Ez dago jokoarik sisteman (No hay juegos en el sistema).</div>
+            <?php endif; ?>
+        </div>
         <div class="content-section">
             <div class="section-title">
                 <i class="bi bi-people"></i>
                 Zure ikasleak
             </div>
             <?php
-            $id_centro = $_SESSION['id_centro'] ?? null;
+            // $id_centro ya está definido arriba
             $alumnos = [];
             if ($id_centro) {
-                $bd = new AccesoBD();
+                // $bd ya está instanciada arriba
                 $alumnos = $bd->obtenerAlumnosPorCentro($id_centro);
             } else {
                 echo "<div class='alert alert-warning'>Ez da aurkitu zure zentroa.</div>";
             }
             ?>
+            
             <?php if (count($alumnos) > 0): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">
@@ -82,8 +143,7 @@ require_once __DIR__ . '/../model/AccesoBD.php';
                                 <th>Izena</th>
                                 <th>Abizena</th>
                                 <th>Emaila</th>
-                                <th>Akzioak</th> <!-- Nueva columna para acciones -->
-                            </tr>
+                                <th>Akzioak</th> </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($alumnos as $alumno): ?>
@@ -109,7 +169,6 @@ require_once __DIR__ . '/../model/AccesoBD.php';
                                                 </li>
                                             </ul>
                                         </div>
-                                        <!-- Modal Editar -->
                                         <div class="modal fade" id="editarModal<?= md5($alumno['email']) ?>" tabindex="-1" aria-labelledby="editarLabel<?= md5($alumno['email']) ?>" aria-hidden="true">
                                           <div class="modal-dialog">
                                             <div class="modal-content">
@@ -137,7 +196,6 @@ require_once __DIR__ . '/../model/AccesoBD.php';
                                             </div>
                                           </div>
                                         </div>
-                                        <!-- Modal Eliminar -->
                                         <div class="modal fade" id="eliminarModal<?= md5($alumno['email']) ?>" tabindex="-1" aria-labelledby="eliminarLabel<?= md5($alumno['email']) ?>" aria-hidden="true">
                                           <div class="modal-dialog">
                                             <div class="modal-content">
@@ -175,7 +233,6 @@ require_once __DIR__ . '/../model/AccesoBD.php';
 </html>
 
 <?php
-// Procesar edición
 if (isset($_POST['editar_usuario'])) {
     $edit_email = $_POST['edit_email'] ?? '';
     $edit_nombre = $_POST['edit_nombre'] ?? '';
@@ -185,11 +242,10 @@ if (isset($_POST['editar_usuario'])) {
         $sql = "UPDATE usuario SET nombre = '" . mysqli_real_escape_string($bd->conexion, $edit_nombre) . "', apellidos = '" . mysqli_real_escape_string($bd->conexion, $edit_apellidos) . "' WHERE email = '" . mysqli_real_escape_string($bd->conexion, $edit_email) . "'";
         $bd->lanzarSQL($sql);
         echo '<div class="alert alert-success">Erabiltzailea eguneratuta!</div>';
-        // Refrescar la página para ver los cambios
+        // recargar pagina
         echo '<meta http-equiv="refresh" content="1">';
     }
 }
-// Procesar eliminación
 if (isset($_POST['eliminar_usuario'])) {
     $delete_email = $_POST['delete_email'] ?? '';
     if ($delete_email) {
@@ -197,7 +253,7 @@ if (isset($_POST['eliminar_usuario'])) {
         $sql = "DELETE FROM usuario WHERE email = '" . mysqli_real_escape_string($bd->conexion, $delete_email) . "'";
         $bd->lanzarSQL($sql);
         echo '<div class="alert alert-danger">Erabiltzailea ezabatuta!</div>';
-        // Refrescar la página para ver los cambios
+        // recargar pagina
         echo '<meta http-equiv="refresh" content="1">';
     }
 }

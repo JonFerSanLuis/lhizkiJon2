@@ -276,7 +276,7 @@ class AccesoBD
 
     //funcion para obtener los usuarios para la tablade admin
     function obtenerUsuarios(){
-        $result = mysqli_query($this->conexion, "SELECT u.id_usuario, u.nombre, u.apellidos, u.email, c.nombre_centro, cf.nombre_ciclo, u.puntos_totales 
+        $result = mysqli_query($this->conexion, "SELECT u.id_usuario, u.nombre, u.apellidos, u.email, u.id_centro, u.id_ciclo, c.nombre_centro, cf.nombre_ciclo, u.puntos_totales 
         FROM usuario u
         LEFT JOIN centro_educativo c ON u.id_centro = c.id_centro
         LEFT JOIN ciclo_formativo cf ON u.id_ciclo = cf.id_ciclo
@@ -310,6 +310,16 @@ class AccesoBD
                     id_ciclo = $id_ciclo, 
                     puntos_totales = $puntos_totales 
                 WHERE id_usuario = $id_usuario";
+
+        $resultado = mysqli_query($this->conexion, $sql);
+
+        return $resultado !== false;
+    }
+
+    function eliminarUsuario($id_usuario) {
+        $id_usuario = (int)$id_usuario;
+
+        $sql = "DELETE FROM usuario WHERE id_usuario = $id_usuario";
 
         $resultado = mysqli_query($this->conexion, $sql);
 
@@ -430,8 +440,11 @@ class AccesoBD
         return $alumnos;
     }
     
-    
-    // Estadisticas para el panel del profesor
+    /**
+     * Devuelve estadísticas para el dashboard del profesor de un centro
+     * @param int $id_centro
+     * @return array
+     */
     function obtenerStatsCentro($id_centro) {
         $id_centro = (int)$id_centro;
         $stats = [
@@ -447,12 +460,19 @@ class AccesoBD
             $row = mysqli_fetch_assoc($res_alumnos);
             $stats['num_alumnos'] = $row['total'];
         }
-        //porcentaje de participacion dependiendo del numero de alumnos que han jugado minimo una vez
+        //porcentaje de participacion dependiendo del numero de alumnos que han jugado al menos una vez
         $sql_part = "SELECT COUNT(DISTINCT r.id_usuario) as participantes FROM resultado r JOIN usuario u ON r.id_usuario = u.id_usuario WHERE u.id_rol = 1 AND u.id_centro = $id_centro";
         $res_part = $this->lanzarSQL($sql_part);
         if ($res_part && mysqli_num_rows($res_part) > 0) {
             $row = mysqli_fetch_assoc($res_part);
             $stats['porcentaje_participacion'] = $stats['num_alumnos'] > 0 ? round(($row['participantes'] / $stats['num_alumnos']) * 100) : 0;
+        }
+        //media de participación dependiendo del número de juegos jugados por usuario
+        $sql_media = "SELECT AVG(num_juegos) as media FROM (SELECT COUNT(*) as num_juegos FROM resultado r JOIN usuario u ON r.id_usuario = u.id_usuario WHERE u.id_rol = 1 AND u.id_centro = $id_centro GROUP BY r.id_usuario) as sub";
+        $res_media = $this->lanzarSQL($sql_media);
+        if ($res_media && mysqli_num_rows($res_media) > 0) {
+            $row = mysqli_fetch_assoc($res_media);
+            $stats['media_participacion'] = $row['media'] ? round($row['media']) : 0;
         }
         //numero de juegos completados
         $sql_completados = "SELECT COUNT(*) as completados FROM resultado r JOIN usuario u ON r.id_usuario = u.id_usuario WHERE r.completado = 1 AND u.id_rol = 1 AND u.id_centro = $id_centro";
@@ -462,5 +482,49 @@ class AccesoBD
             $stats['num_completados'] = $row['completados'];
         }
         return $stats;
+    }
+
+    
+    // funciones para que el profesor active los juegos
+    function obtenerTodosLosJuegos() {
+        $juegos = array();
+        // 1=activo 2=inactivo
+        $sql = "SELECT id_juego, titulo, descripcion, id_estado FROM juego";
+        
+        $result = mysqli_query($this->conexion, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $juegos[] = $row;
+            }
+        }
+        return $juegos;
+    }
+
+    function actualizarEstadoJuego($id_juego, $id_estado) {
+        $id_juego = (int)$id_juego;
+        $id_estado = (int)$id_estado;
+        
+        $sql = "UPDATE juego SET id_estado = $id_estado WHERE id_juego = $id_juego";
+        
+        $resultado = mysqli_query($this->conexion, $sql);
+        return $resultado !== false;
+    }
+
+    function estaJuegoActivo($id_juego) {
+        $id_juego = (int)$id_juego;
+        
+        $sql = "SELECT id_estado FROM juego WHERE id_juego = $id_juego";
+        
+        $result = mysqli_query($this->conexion, $sql);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            // El juego está activo solo si id_estado es 1
+            return $row['id_estado'] == 1;
+        }
+        
+        // Si no se encuentra el juego o está inactivo, devuelve false
+        return false;
     }
 }

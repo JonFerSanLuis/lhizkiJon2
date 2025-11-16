@@ -26,38 +26,57 @@
         return $usuarios;
     }
 
-    function editarUsuario(){
-        $bd = new AccesoBD();
-        $resultado = $bd->editarUsuario($id_usuario, $nombre, $apellidos, $email, $id_centro, $id_ciclo, $puntos_totales);
-
-        return $resultado;
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'editarUsuario') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json');
-        $id_usuario = $_POST['id_usuario'] ?? null;
-        $nombre = $_POST['nombre'] ?? null;
-        $apellidos = $_POST['apellidos'] ?? null;
-        $email = $_POST['email'] ?? null;
-        $id_centro = $_POST['id_centro'] ?? null;
-        $id_ciclo = $_POST['id_ciclo'] ?? null;
-        $puntos_totales = $_POST['puntos_totales'] ?? 0;
-        
-        if (!$id_usuario || !$nombre || !$email || !$id_centro || !$id_ciclo) {
-            echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios']);
-            exit;
-        }
-        
+        $accion = $_POST['action'] ?? '';
         $bd = new AccesoBD();
-        $resultado = $bd->editarUsuario($id_usuario, $nombre, $apellidos, $email, $id_centro, $id_ciclo, $puntos_totales);
-        
-        if ($resultado) {
-            echo json_encode(['success' => true, 'message' => 'Usuario actualizado correctamente']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al actualizar usuario']);
+
+        switch ($accion) {
+            case 'editarUsuario':
+                $id_usuario = $_POST['id_usuario'] ?? null;
+                $nombre = $_POST['nombre'] ?? null;
+                $apellidos = $_POST['apellidos'] ?? null;
+                $email = $_POST['email'] ?? null;
+                $id_centro = $_POST['id_centro'] ?? null;
+                $id_ciclo = $_POST['id_ciclo'] ?? null;
+                $puntos_totales = $_POST['puntos_totales'] ?? 0;
+
+                if (!$id_usuario || !$nombre || !$email || !$id_centro || !$id_ciclo) {
+                    echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios']);
+                    break;
+                }
+
+                $resultado = $bd->editarUsuario($id_usuario, $nombre, $apellidos, $email, $id_centro, $id_ciclo, $puntos_totales);
+
+                if ($resultado) {
+                    echo json_encode(['success' => true, 'message' => 'Usuario actualizado correctamente']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al actualizar usuario']);
+                }
+                break;
+
+            case 'eliminarUsuario':
+                $id_usuario = $_POST['id_usuario'] ?? null;
+
+                if (!$id_usuario) {
+                    echo json_encode(['success' => false, 'message' => 'Identificador de usuario no válido']);
+                    break;
+                }
+
+                $resultado = $bd->eliminarUsuario($id_usuario);
+
+                if ($resultado) {
+                    echo json_encode(['success' => true, 'message' => 'Usuario eliminado correctamente']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Error al eliminar usuario']);
+                }
+                break;
+
+            default:
+                echo json_encode(['success' => false, 'message' => 'Acción no válida']);
+                break;
         }
-    } else {
-        //echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        exit;
     }
 
 //hola

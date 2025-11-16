@@ -1,83 +1,234 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const editModalElement = document.getElementById('editUserModal');
+  const deleteModalElement = document.getElementById('deleteUserModal');
+  const editForm = document.getElementById('editUserForm');
+  const centroSelect = document.getElementById('editUserCentro');
+  const cicloSelect = document.getElementById('editUserCiclo');
+  const deleteUserName = document.getElementById('deleteUserName');
+  const controllerUrl = window.usuariosAdmin && window.usuariosAdmin.controllerUrl ? window.usuariosAdmin.controllerUrl : '../controller/usuariosAdmin-controller.php';
+  const editModal = editModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(editModalElement) : null;
+  const deleteModal = deleteModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(deleteModalElement) : null;
+  let deleteTargetId = null;
+  let deleteTargetRow = null;
+  let editingRow = null;
 
-  const editButtons = document.querySelectorAll('.edit-user');
-  editButtons.forEach(function(btn) {
+  document.querySelectorAll('.edit-user').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
+      if (!editModal) {
+        return;
+      }
 
-      const userId = btn.getAttribute('data-id');
       const row = btn.closest('tr');
-      const name = row.querySelectorAll('td')[0].textContent;
-      const surnames = row.querySelectorAll('td')[1].textContent;
-      const email = row.querySelectorAll('td')[2].textContent;
-      const centro = row.querySelectorAll('td')[3].textContent;
-      const ciclo = row.querySelectorAll('td')[4].textContent;
-      const puntos = row.querySelectorAll('td')[5].textContent;
-      document.getElementById('editUserId').value = userId;
-      document.getElementById('editUserName').value = name;
-      document.getElementById('editUserSurnames').value = surnames;
-      document.getElementById('editUserEmail').value = email;
-      document.getElementById('editUserCentro').value = centro;
-      document.getElementById('editUserCiclo').value = ciclo;
-      document.getElementById('editUserPuntos').value = puntos;
-      var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-      modal.show();
+      if (!row) {
+        return;
+      }
+
+      editingRow = row;
+
+      const cells = row.querySelectorAll('td');
+      document.getElementById('editUserId').value = btn.dataset.id || '';
+      document.getElementById('editUserName').value = (cells[0]?.textContent || '').trim();
+      document.getElementById('editUserSurnames').value = (cells[1]?.textContent || '').trim();
+      document.getElementById('editUserEmail').value = (cells[2]?.textContent || '').trim();
+      document.getElementById('editUserPuntos').value = row.dataset.puntos ? row.dataset.puntos : (cells[5]?.textContent || '').trim();
+
+      if (centroSelect) {
+        setSelectValue(centroSelect, row.dataset.centroId || '');
+      }
+
+      if (cicloSelect) {
+        setSelectValue(cicloSelect, row.dataset.cicloId || '');
+      }
+
+      editModal.show();
     });
   });
 
-   document.getElementById('guardarCambios').addEventListener('click', function() {
-        // Obtener todos los valores del formulario
-        const userId = document.getElementById('editUserId').value;
-        const nombre = document.getElementById('editUserName').value;
-        const apellidos = document.getElementById('editUserSurnames').value;
-        const email = document.getElementById('editUserEmail').value;
-        const idCentro = document.getElementById('editUserCentro').value;
-        const idCiclo = document.getElementById('editUserCiclo').value;
-        const puntos = document.getElementById('editUserPuntos').value;
-        
-        // Validar que todos los campos estén llenos
-        if (!nombre || !email || !idCentro || !idCiclo) {
-            alert('Mesedez, bete eremu guztiak');
-            return;
-        }
-        
-        // Crear objeto FormData para enviar al servidor
-        const formData = new FormData();
-        formData.append('id_usuario', userId);
-        formData.append('nombre', nombre);
-        formData.append('apellidos', apellidos);
-        formData.append('email', email);
-        formData.append('id_centro', idCentro);
-        formData.append('id_ciclo', idCiclo);
-        formData.append('puntos_totales', puntos);
-        
-        // Enviar datos al servidor
-        fetch('../controller/usuariosAdmin-controller.php', {
-            method: 'POST',
-            body: formData
-        })
+  const guardarCambiosBtn = document.getElementById('guardarCambios');
+  if (guardarCambiosBtn) {
+    guardarCambiosBtn.addEventListener('click', function() {
+      if (!editForm) {
+        return;
+      }
+
+      const userId = document.getElementById('editUserId').value;
+      const nombre = document.getElementById('editUserName').value.trim();
+      const apellidos = document.getElementById('editUserSurnames').value.trim();
+      const email = document.getElementById('editUserEmail').value.trim();
+      const idCentro = centroSelect ? centroSelect.value : '';
+      const idCiclo = cicloSelect ? cicloSelect.value : '';
+      const puntos = document.getElementById('editUserPuntos').value.trim();
+
+      if (!nombre || !email || !idCentro || !idCiclo) {
+        alert('Mesedez, bete eremu derrigorrezkoak');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('action', 'editarUsuario');
+      formData.append('id_usuario', userId);
+      formData.append('nombre', nombre);
+      formData.append('apellidos', apellidos);
+      formData.append('email', email);
+      formData.append('id_centro', idCentro);
+      formData.append('id_ciclo', idCiclo);
+      formData.append('puntos_totales', puntos);
+
+      fetch(controllerUrl, {
+        method: 'POST',
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
           console.log('Respuesta cruda del servidor:', data);
-            if (data.success) {
-                alert('Erabiltzailea eguneratu da!');
-                // Cerrar el modal
-                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                // Recargar la página para ver los cambios
-                location.reload();
-            } else {
-                alert('Errorea: ' + data.message);
+          if (data.success) {
+            alert('Erabiltzailea eguneratu da!');
+            if (editModal) {
+              editModal.hide();
             }
+            if (editingRow) {
+              updateRowAfterEdit(editingRow, {
+                nombre,
+                apellidos,
+                email,
+                idCentro,
+                idCiclo,
+                puntos,
+                centroNombre: getSelectedOptionText(centroSelect),
+                cicloNombre: getSelectedOptionText(cicloSelect)
+              });
+            }
+          } else {
+            alert('Errorea: ' + data.message);
+          }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Errorea gertatu da');
+          console.error('Error:', error);
+          alert('Errorea gertatu da');
         });
     });
+  }
 
+  document.querySelectorAll('.delete-user').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (!deleteModal) {
+        return;
+      }
 
+      const row = btn.closest('tr');
+      const cells = row ? row.querySelectorAll('td') : [];
+      const nombre = (cells[0]?.textContent || '').trim();
+      const apellidos = (cells[1]?.textContent || '').trim();
 
+      deleteTargetId = btn.dataset.id || null;
+      deleteTargetRow = row || null;
 
+      if (deleteUserName) {
+        const fullName = (nombre + ' ' + apellidos).trim();
+        deleteUserName.textContent = fullName || nombre;
+      }
 
-  
+      deleteModal.show();
+    });
+  });
+
+  const confirmDeleteBtn = document.getElementById('confirmDeleteUser');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', function() {
+      if (!deleteTargetId) {
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('action', 'eliminarUsuario');
+      formData.append('id_usuario', deleteTargetId);
+
+      fetch(controllerUrl, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Erabiltzailea ezabatu da!');
+            if (deleteModal) {
+              deleteModal.hide();
+            }
+            if (deleteTargetRow) {
+              deleteTargetRow.remove();
+            }
+          } else {
+            alert('Errorea: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Errorea gertatu da');
+        });
+    });
+  }
+
+  if (deleteModalElement) {
+    deleteModalElement.addEventListener('hidden.bs.modal', function() {
+      deleteTargetId = null;
+      deleteTargetRow = null;
+      if (deleteUserName) {
+        deleteUserName.textContent = '';
+      }
+    });
+  }
+
+  if (editModalElement) {
+    editModalElement.addEventListener('hidden.bs.modal', function() {
+      editingRow = null;
+    });
+  }
+
+  function setSelectValue(selectElement, value) {
+    if (!selectElement) {
+      return;
+    }
+
+    const options = Array.from(selectElement.options);
+    const match = options.find(option => option.value === value);
+
+    if (match) {
+      selectElement.value = value;
+    } else if (options.length) {
+      selectElement.selectedIndex = 0;
+    }
+  }
+
+  function getSelectedOptionText(selectElement) {
+    if (!selectElement) {
+      return '';
+    }
+
+    const option = selectElement.options[selectElement.selectedIndex];
+    return option ? option.textContent.trim() : '';
+  }
+
+  function updateRowAfterEdit(row, data) {
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) {
+      return;
+    }
+
+    cells[0].textContent = data.nombre;
+    cells[1].textContent = data.apellidos;
+    cells[2].textContent = data.email;
+    if (data.centroNombre) {
+      cells[3].textContent = data.centroNombre;
+    }
+    if (data.cicloNombre) {
+      cells[4].textContent = data.cicloNombre;
+    }
+    cells[5].textContent = data.puntos;
+
+    row.dataset.centroId = data.idCentro;
+    row.dataset.cicloId = data.idCiclo;
+    row.dataset.puntos = data.puntos;
+  }
 });

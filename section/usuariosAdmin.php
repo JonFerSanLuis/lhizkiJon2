@@ -1,5 +1,11 @@
 <?php
 require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
+
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$scriptDir = rtrim($scriptDir, '/');
+$basePath = preg_replace('#/section$#', '', $scriptDir);
+$controllerUrl = ($basePath !== '' ? $basePath : '') . '/controller/usuariosAdmin-controller.php';
+$controllerUrl = '/' . ltrim(preg_replace('#//+#', '/', $controllerUrl), '/');
 ?>
 <div class="container bg-gradient-purple text-purple p-4 rounded-3 ">
     
@@ -51,18 +57,28 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
                 <?php
                     $usuarios = mostrarUsuarios();
                     foreach($usuarios as $usuario){
-                        echo '<tr>';
-                        echo '<th scope="row">' . htmlspecialchars($usuario['id_usuario']) . '</th>';
-                        echo '<td>' . htmlspecialchars($usuario['nombre']) . '</td>'; 
-                        echo '<td>' . htmlspecialchars($usuario['apellidos']) . '</td>'; 
-                        echo '<td>' . htmlspecialchars($usuario['email']) . '</td>';
-                        echo '<td>' . htmlspecialchars($usuario['nombre_centro']) . '</td>';
-                        echo '<td>' . htmlspecialchars($usuario['nombre_ciclo']) . '</td>';
-                        echo '<td>' . htmlspecialchars($usuario['puntos_totales']) . '</td>';
+                        $idUsuario = (int)($usuario['id_usuario'] ?? 0);
+                        $nombre = htmlspecialchars((string)($usuario['nombre'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $apellidos = htmlspecialchars((string)($usuario['apellidos'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $email = htmlspecialchars((string)($usuario['email'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $nombreCentro = htmlspecialchars((string)($usuario['nombre_centro'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $nombreCiclo = htmlspecialchars((string)($usuario['nombre_ciclo'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $puntos = htmlspecialchars((string)($usuario['puntos_totales'] ?? '0'), ENT_QUOTES, 'UTF-8');
+                        $centroId = htmlspecialchars((string)($usuario['id_centro'] ?? ''), ENT_QUOTES, 'UTF-8');
+                        $cicloId = htmlspecialchars((string)($usuario['id_ciclo'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+                        echo '<tr data-user-id="' . $idUsuario . '" data-centro-id="' . $centroId . '" data-ciclo-id="' . $cicloId . '" data-puntos="' . $puntos . '">';
+                        echo '<th scope="row">' . $idUsuario . '</th>';
+                        echo '<td>' . $nombre . '</td>';
+                        echo '<td>' . $apellidos . '</td>';
+                        echo '<td>' . $email . '</td>';
+                        echo '<td>' . $nombreCentro . '</td>';
+                        echo '<td>' . $nombreCiclo . '</td>';
+                        echo '<td>' . $puntos . '</td>';
                         echo '<td>
                                 <ul class="action-list">
-                                    <li><a href="#" data-tip="edit" class="edit-user" data-id="' . htmlspecialchars($usuario['id_usuario']) . '"><i class="fa fa-edit"></i></a></li>
-                                    <li><a href="#" data-tip="delete" data-id="' . htmlspecialchars($usuario['id_usuario']) . '"><i class="fa fa-trash"></i></a></li>
+                                    <li><a href="#" data-tip="edit" class="edit-user" data-id="' . $idUsuario . '"><i class="fa fa-edit"></i></a></li>
+                                    <li><a href="#" data-tip="delete" class="delete-user" data-id="' . $idUsuario . '"><i class="fa fa-trash"></i></a></li>
                                 </ul>
                             </td>';
                         echo '</tr>';
@@ -95,51 +111,102 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
                 
 </div>
 
+    <div id="CerrarSesion">
+        <div class="modal fade" id="CerrarSesionModal" tabindex="-1" aria-labelledby="CerrarSesionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="CerrarSesionModalLabel">Confirmar Cierre de Sesión</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Estás seguro de que deseas cerrar sesión?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <!-- Modal para editar usuario -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editUserModalLabel">Editar Usuario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editUserForm">
-          <input type="hidden" id="editUserId"> 
-          <div class="mb-3">
-            <label for="editUserName" class="form-label">Izena</label>
-            <input type="text" class="form-control" id="editUserName">
-          </div>
-          <div class="mb-3">
-            <label for="editUserName" class="form-label">Apellidoak</label>
-            <input type="text" class="form-control" id="editUserSurnames">
-          </div>
-          <div class="mb-3">
-            <label for="editUserEmail" class="form-label">Email</label>
-            <input type="email" class="form-control" id="editUserEmail">
-          </div>
-          <div class="mb-3">
-            <label for="editUserCentro" class="form-label">Esleitutako zentroa</label>
-            <input type="text" class="form-control" id="editUserCentro">
-          </div>
-          <div class="mb-3">
-            <label for="editUserCiclo" class="form-label">Zikloa</label>
-            <input type="text" class="form-control" id="editUserCiclo">
-          </div>
-          <div class="mb-3">
-            <label for="editUserPuntos" class="form-label">Puntu Totala</label>
-            <input type="number" class="form-control" id="editUserPuntos">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Itxi</button>
-          <button type="button" class="btn btn-primary" id="guardarCambios">Gorde</button>
-      </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Erabiltzailea editatu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" novalidate>
+                    <input type="hidden" id="editUserId" name="id_usuario">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editUserName" class="form-label">Izena</label>
+                            <input type="text" class="form-control" id="editUserName" name="nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editUserSurnames" class="form-label">Apellidoak</label>
+                            <input type="text" class="form-control" id="editUserSurnames" name="apellidos">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editUserEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editUserEmail" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editUserPuntos" class="form-label">Puntu Totala</label>
+                            <input type="number" class="form-control" id="editUserPuntos" name="puntos_totales" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editUserCentro" class="form-label">Esleitutako zentroa</label>
+                            <select class="form-select" id="editUserCentro" name="id_centro" required>
+                                <option value="" disabled>Hautatu zentroa</option>
+                                <?php mostrarOpcionesCentros(); ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editUserCiclo" class="form-label">Zikloa</label>
+                            <select class="form-select" id="editUserCiclo" name="id_ciclo" required>
+                                <option value="" disabled>Hautatu zikloa</option>
+                                <?php mostrarOpcionesCiclos(); ?>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Itxi</button>
+                    <button type="button" class="btn btn-primary" id="guardarCambios">Gorde</button>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- Modal para eliminar usuario -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Erabiltzailea ezabatu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Ziur zaude <strong id="deleteUserName"></strong> erabiltzailea ezabatu nahi duzula?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Utzi</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Ezabatu</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Scripts: primero Bootstrap, luego tu JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+    window.usuariosAdmin = window.usuariosAdmin || {};
+    window.usuariosAdmin.controllerUrl = '<?php echo htmlspecialchars($controllerUrl, ENT_QUOTES, 'UTF-8'); ?>';
+</script>
 <script src="./js/usuariosAdmin.js"></script>
