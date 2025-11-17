@@ -1,17 +1,67 @@
 <?php
 //require_once 'config.php';
 session_start();
-//hola
 
+// comprobar sesion y rol admin de forma robusta
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+// requiere que exista un identificador de usuario / marca de login y el rol
+if (empty($_SESSION['user_id']) && empty($_SESSION['loggedin'])) {
+    header('Location: login.php');
+    exit();
+}
+if (empty($_SESSION['user_role'])) {
+    header('Location: login.php');
+    exit();
+}
+
+// redirigir inmediatamente si no es admin
+if ($_SESSION['user_role'] !== 'admin') {
+    switch ($_SESSION['user_role']) {
+        case 'user':
+            header('Location: indexUser.php');
+            break;
+        case 'guest':
+            header('Location: indexGuest.php');
+            break;
+        default:
+            header('Location: login.php');
+            break;
+    }
+    exit();
+}
+
+// lista blanca de paginas permitidas para admin
+$allowed_pages = ['homeAdmin', 'usuariosAdmin', 'partidasAdmin', 'centrosAdmin'];
+
+// tomar la pagina solicitada y normalizarla
+$page = isset($_GET['page']) ? basename($_GET['page']) : 'homeAdmin';
+if (!in_array($page, $allowed_pages, true)) {
+    $page = 'homeAdmin';
+}
+
+// sobrescribir $_GET['page'] con el valor validado para evitar que
+// el include posterior use un valor no validado (previene LFI/escapes)
+$_GET['page'] = $page;
+$pageValidated = $page; // por si quieres usar la variable directamente mas adelante
+
+// opcional: regenerar id de sesion al entrar al panel (mejora contra fixation)
+if (empty($_SESSION['session_hardener'])) {
+    session_regenerate_id(true);
+    $_SESSION['session_hardener'] = 1;
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="./img/logoH1.png">
     <link rel="stylesheet" href="css/stylesAdmin.css">
     <title>LHIZKI-PanelAdmin</title>
 </head>
@@ -27,15 +77,18 @@ session_start();
             <div class="row">                   
                 <p class=" text-white-50 h5">Sistema kudeaketa</p>
             </div>
-        </div>
-
-        <div>
-            <nav class="nav nav-pills nav-fill bg-opacity-10 rounded-top p-2">
+        </div>        <div class="d-flex justify-content-between align-items-center">
+            <nav class="nav nav-pills nav-fill bg-opacity-10 rounded-top p-2 flex-grow-1">
                 <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=homeAdmin">Home</a>
                 <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=usuariosAdmin">Usuarioak</a>
-                <a class="nav-link text-white bg-opacity-10" href="#">Partidak</a>
+                <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=partidasAdmin">Partidak</a>
                 <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=centrosAdmin">Centroak</a>
             </nav>
+            <div class="ms-3">
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#CerrarSesionModal">
+                    <i class="bi bi-box-arrow-right me-1"></i> Irten
+                </button>
+            </div>
         </div>
 
 
@@ -56,8 +109,46 @@ session_start();
         ?>
     
     </main>
- 
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    
+    <?php
+    // Incluir scripts específicos según la página
+    $page = isset($_GET['page']) ? $_GET['page'] : 'homeAdmin';
+    switch ($page) {
+        case 'homeAdmin':
+            echo '<script src="js/homeAdmin.js"></script>';
+            break;
+        case 'usuariosAdmin':
+            echo '<script src="js/usuariosAdmin.js"></script>';
+            break;
+        case 'partidasAdmin':
+            echo '<script src="js/partidasAdmin.js"></script>';
+            break;
+        case 'centrosAdmin':
+            echo '<script src="js/centrosAdmin.js"></script>';
+            break;    }
+    ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Modal para cerrar sesión -->
+    <div class="modal fade" id="CerrarSesionModal" tabindex="-1" aria-labelledby="CerrarSesionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="CerrarSesionModalLabel">Confirmar Cierre de Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas cerrar sesión?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para cerrar sesión -->
+    <script src="js/cerrar-sesion.js"></script>
 </body>
 </html>

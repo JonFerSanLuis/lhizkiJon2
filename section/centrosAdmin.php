@@ -1,9 +1,10 @@
 <?php
-require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
+require_once __DIR__ . '/../controller/centrosAdmin-controller.php';
 ?>
 
 <!-- Formulario de búsqueda y filtros -->
-<div class="container bg-gradient-purple text-purple p-4 rounded-3">    <div class="row align-items-center mb-3">
+<div class="container bg-gradient-purple text-purple p-4 rounded-3">
+    <div class="row align-items-center mb-3">
         <div class="col">
             <h4 class="mb-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-building me-2" viewBox="0 0 16 16">
@@ -13,115 +14,139 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
                 Zentro Hezigarriak Kudeatu
             </h4>
         </div>
-    </div>      <form action="">
-        <div class="row">
+    </div>    <form action="" method="GET">
+        <input type="hidden" name="page" value="centrosAdmin">
+        
+        <div class="row justify-content-center">
             <div class="col-md-3 mb-3">
-                <label for="searchCentro" class="form-label">Zentroaren Izena</label>
-                <input type="text" class="form-control" id="searchCentro" placeholder="Zentroaren izena">
+                <label for="searchCentro" class="form-label">
+                    <i class="fas fa-building me-2"></i>Zentroaren Izena
+                </label>
+                <input type="text" class="form-control" id="searchCentro" name="buscar_centro" 
+                       placeholder="Zentroaren izena" 
+                       value="<?= htmlspecialchars($_GET['buscar_centro'] ?? '') ?>">
             </div>
             <div class="col-md-3 mb-3">
-                <label for="searchProvincia" class="form-label">Probintzia</label>
-                <select id="searchProvincia" class="form-select">
+                <label for="searchProvincia" class="form-label">
+                    <i class="fas fa-map-marker-alt me-2"></i>Probintzia
+                </label>
+                <select id="searchProvincia" name="probintzia" class="form-select">
                     <option value="">Guztiak</option>
-                    <option value="Araba">Araba</option>
-                    <option value="Bizkaia">Bizkaia</option>
-                    <option value="Gipuzkoa">Gipuzkoa</option>
+                    <option value="Araba" <?= ($_GET['probintzia'] ?? '') === 'Araba' ? 'selected' : '' ?>>Araba</option>
+                    <option value="Bizkaia" <?= ($_GET['probintzia'] ?? '') === 'Bizkaia' ? 'selected' : '' ?>>Bizkaia</option>
+                    <option value="Gipuzkoa" <?= ($_GET['probintzia'] ?? '') === 'Gipuzkoa' ? 'selected' : '' ?>>Gipuzkoa</option>
                 </select>
             </div>
             <div class="col-md-3 mb-3">
-                <label for="searchMunicipio" class="form-label">Udalerria</label>
-                <input type="text" class="form-control" id="searchMunicipio" placeholder="Udalerria">
-            </div>
-            <div class="col-md-3 mb-3 d-flex align-items-end gap-2">
-                <button type="button" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
-                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-                    </svg>    
-                    Bilatu
-                </button>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCentroModal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                    </svg>
-                    Gehitu
-                </button>
+                <label for="searchMunicipio" class="form-label">
+                    <i class="fas fa-city me-2"></i>Udalerria
+                </label>
+                <input type="text" class="form-control" id="searchMunicipio" name="udalerria" 
+                       placeholder="Udalerria" 
+                       value="<?= htmlspecialchars($_GET['udalerria'] ?? '') ?>">
             </div>
         </div>
+        
+        <div class="d-flex gap-2 justify-content-center mb-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i>Bilatu
+            </button>
+            <a href="?page=centrosAdmin" class="btn btn-secondary">
+                <i class="fas fa-undo me-2"></i>Garbitu
+            </a>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCentroModal">
+                <i class="fas fa-plus me-2"></i>Gehitu
+            </button>
+        </div>
+        
+        <?php if (!empty($_GET['buscar_centro']) || !empty($_GET['probintzia']) || !empty($_GET['udalerria'])): ?>
+            <div class="mt-3 text-center search-results-info">
+                <small>
+                    Iragazki aktiboak: 
+                    <?php if (!empty($_GET['buscar_centro'])): ?>
+                        <span class="badge bg-primary">Bilaketa: "<?= htmlspecialchars($_GET['buscar_centro']) ?>"</span>
+                    <?php endif; ?>
+                    <?php if (!empty($_GET['probintzia'])): ?>
+                        <span class="badge bg-info">Probintzia: "<?= htmlspecialchars($_GET['probintzia']) ?>"</span>
+                    <?php endif; ?>
+                    <?php if (!empty($_GET['udalerria'])): ?>
+                        <span class="badge bg-warning">Udalerria: "<?= htmlspecialchars($_GET['udalerria']) ?>"</span>
+                    <?php endif; ?>
+                </small>
+            </div>
+        <?php endif; ?>
     </form>
 </div>
 
-<div class="container mt-4 table-responsive bg-gradient-blue p-4 rounded-3">
-    <div class="">
-        <table class="table bg-gradient-blue text-white">
+<div class="container mt-4 table-responsive bg-gradient-blue p-4 rounded-3">    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="text-blue mb-0">
+            <i class="fas fa-list me-2"></i>Zentroen Zerrenda
+        </h5>
+        <span class="badge bg-info">
+            <?php echo $totalCentros; ?> zentro aurkituak
+        </span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table bg-gradient-blue text-white table-sm">
             <thead class="bg-gradient-blue text-blue">
                 <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Zentroaren Izena</th>
-                    <th scope="col">Probintzia</th>
-                    <th scope="col">Udalerria</th>  
-                    <th scope="col">Irakasle Arduraduna</th>
-                    
-                    <th scope="col">Ekintzak</th>
+                    <th scope="col" class="text-nowrap"><i class="fas fa-hashtag me-1"></i>ID</th>
+                    <th scope="col" class="text-nowrap"><i class="fas fa-building me-1"></i>Zentroaren Izena</th>
+                    <th scope="col" class="d-none d-md-table-cell"><i class="fas fa-map-marker-alt me-1"></i>Probintzia</th>
+                    <th scope="col" class="d-none d-lg-table-cell"><i class="fas fa-city me-1"></i>Udalerria</th>
+                    <th scope="col" class="text-nowrap"><i class="fas fa-user-tie me-1"></i>Irakasle Arduraduna</th>
+                    <th scope="col" class="text-nowrap"><i class="fas fa-cogs me-1"></i>Ekintzak</th>
                 </tr>
-            </thead>
-            <tbody class="bg-gradient-blue text-blue">
-                <!-- Ejemplo de datos de centros -->                <tr>
-                    <td>1</td>
-                    <td>Egibide</td>
-                    <td>Araba </td>
-                    <td>Vitoria-Gasteiz</td>
-                    <td>jon.perez@egibide.org</td>
-                    
-                    <td>
-                        <button class="btn  btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCentroModal">
-                           <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>IES Miguel de Unamuno</td>
-                    <td>Bizkaia</td>
-                    <td>Bilbao</td>
-                    
-                    <td>maria.garcia@unamuno.edu</td>
-                    
-                    <td>
-                         <button class="btn  btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCentroModal">
-                           <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>Politecnico Easo</td>
-                    <td>Gipuzkoa</td>
-                    <td>Donostia</td>
-                    <td>ander.etxeberria@easo.eus</td>
-                    
-                    <td>
-                        <button class="btn  btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCentroModal">
-                           <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            </tbody>    
+            </thead>            <tbody class="bg-gradient-blue text-blue">
+                <?php if (empty($centros)): ?>
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-info-circle me-2"></i>Ez da zentrorik aurkitu
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach($centros as $centro): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($centro['id_centro']) ?></td>
+                        <td><?= htmlspecialchars($centro['nombre_centro']) ?></td>
+                        <td class="d-none d-md-table-cell"><?= htmlspecialchars($centro['provincia'] ?? '') ?></td>
+                        <td class="d-none d-lg-table-cell"><?= htmlspecialchars($centro['municipio'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($centro['profesor_email'] ?? 'Irakaslerik ez') ?></td>                        <td>
+                            <ul class="action-list">
+                                <li>
+                                    <a href="#" data-tip="edit" 
+                                       onclick="cargarDatosCentro(<?= $centro['id_centro'] ?>); return false;"
+                                       data-bs-toggle="modal" data-bs-target="#editCentroModal"
+                                       aria-label="Zentroa editatu">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" data-tip="delete" 
+                                       class="delete-centro" 
+                                       data-id="<?= $centro['id_centro'] ?>" 
+                                       data-name="<?= htmlspecialchars($centro['nombre_centro'], ENT_QUOTES) ?>"
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#deleteCentroModal"
+                                       aria-label="Zentroa ezabatu">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
         </table>
-    </div>
-    <div class="panel-footer text-blue">
+    </div>    <div class="panel-footer text-blue">
         <div class="row">
-            <div class="col col-sm-6 col-xs-6">showing <b>3</b> out of <b>15</b> entries</div>
+            <div class="col col-sm-6 col-xs-6">
+                mostrando <b><?= count($centros) ?></b> de <b><?= $totalCentros ?></b> sarrerak
+            </div>
             <div class="col-sm-6 col-xs-6 justify-content-end pe-5 d-flex">
+                <?php if ($totalCentros > 10): ?>
                 <ul class="pagination hidden-xs pull-right">
                     <li><a href="#"><</a></li>
                     <li class="active"><a href="#">1</a></li>
@@ -135,6 +160,7 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
                     <li><a href="#"><</a></li>
                     <li><a href="#">></a></li>
                 </ul>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -159,17 +185,11 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
               <label for="addCentroProvincia" class="form-label">Probintzia <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="addCentroProvincia" required>
             </div>
-          </div>
-          <div class="row">
-            
+          </div>          <div class="row">
             <div class="col-md-6 mb-3">
               <label for="addCentroMunicipio" class="form-label">Udalerria</label>
-              <input type="tel" class="form-control" id="addCentroMunicipio" >
+              <input type="text" class="form-control" id="addCentroMunicipio">
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="addCentroDireccion" class="form-label">Helbidea</label>
-            <textarea class="form-control" id="addCentroDireccion" rows="2" placeholder="Zentroaren helbide osoa"></textarea>
           </div>
           
           <hr>
@@ -193,12 +213,7 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
             <div class="col-md-6 mb-3">
               <label for="addProfesorPassword" class="form-label">Pasahitza <span class="text-danger">*</span></label>
               <input type="password" class="form-control" id="addProfesorPassword" required>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="addProfesorEspecialidad" class="form-label">Espezialitatea</label>
-            <input type="text" class="form-control" id="addProfesorEspecialidad" placeholder="Adib: Informatika, Mekanika...">
-          </div>
+            </div>          </div>
         </form>
       </div>
       <div class="modal-footer">
@@ -229,17 +244,11 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
               <label for="editCentroProvincia" class="form-label">Probintzia <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="editCentroProvincia" required>
             </div>
-          </div>
-          <div class="row">
-            
+          </div>          <div class="row">
             <div class="col-md-6 mb-3">
               <label for="editCentroMunicipio" class="form-label">Udalerria</label>
-              <input type="tel" class="form-control" id="editCentroMunicipio" >
+              <input type="text" class="form-control" id="editCentroMunicipio">
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="editCentroDireccion" class="form-label">Helbidea</label>
-            <textarea class="form-control" id="editCentroDireccion" rows="2" placeholder="Zentroaren helbide osoa"></textarea>
           </div>
           
           <hr>
@@ -258,12 +267,7 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
           <div class="row">
             <div class="col-md-6 mb-3">
               <label for="editProfesorEmail" class="form-label">Email <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" id="editProfesorEmail" required>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="editProfesorEspecialidad" class="form-label">Espezialitatea</label>
-              <input type="text" class="form-control" id="editProfesorEspecialidad" placeholder="Adib: Informatika, Mekanika...">
-            </div>
+              <input type="email" class="form-control" id="editProfesorEmail" required>            </div>
           </div>
           <div class="mb-3">
             <div class="form-check">
@@ -283,9 +287,60 @@ require_once __DIR__ . '/../controller/usuariosAdmin-controller.php';
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Utzi</button>
         <button type="button" class="btn btn-warning">Aldaketak Gorde</button>
       </div>
+    </div>  </div>
+</div>
+
+<!-- Modal para eliminar centro -->
+<div class="modal fade" id="deleteCentroModal" tabindex="-1" aria-labelledby="deleteCentroModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteCentroModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>Zentroa Ezabatu
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger" role="alert">
+          <h6><i class="fas fa-warning me-2"></i>KONTUZ! Ekintza hau ezin da desegin</h6>
+        </div>
+        
+        <p class="mb-3">
+          Ziur zaude <strong id="deleteCentroName" class="text-danger"></strong> zentroa ezabatu nahi duzula?
+        </p>
+        
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title text-warning">
+              <i class="fas fa-info-circle me-2"></i>Ondorengo datuak ezabatuko dira:
+            </h6>
+            <ul class="list-unstyled mb-0">
+              <li><i class="fas fa-building text-primary me-2"></i>Zentroaren informazio guztia</li>
+              <li><i class="fas fa-users text-info me-2"></i>Zentro horretako erabiltzaile guztiak (irakasleak eta ikasleak)</li>
+              <li><i class="fas fa-chart-bar text-warning me-2"></i>Erabiltzaile horien joko-emaitza guztiak</li>
+              <li><i class="fas fa-graduation-cap text-success me-2"></i>Zentro horretako ziklo-esleitapenak</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="mt-3">
+          <small class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            Operazio hau iraun dezake denbora pixka bat datu-kopuru handiaren arabera.
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Utzi
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteCentro">
+          <i class="fas fa-trash me-2"></i>Bai, Ezabatu
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="./js/centrosAdmin.js"></script>
+<script src="../js/centrosAdmin.js"></script>

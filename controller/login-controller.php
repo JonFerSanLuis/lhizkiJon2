@@ -19,6 +19,15 @@ if ($resultado) {
     $accesoBD->rellenarUsuario($usuario, $email);
     $rol = $usuario->getIdRol() ?? 1;
     
+    // Set user_role based on rol
+    if ($rol == 3) {
+        $_SESSION["user_role"] = "admin";
+    } elseif ($rol == 1 || $rol == 2) {
+        $_SESSION["user_role"] = "user";
+    } else {
+        $_SESSION["user_role"] = "guest";
+    }
+    
     // Guardar id_centro en la sesión (asegura el nombre correcto del método)
     $_SESSION["id_centro"] = $usuario->getIdcentro();
 

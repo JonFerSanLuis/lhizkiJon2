@@ -2,6 +2,6 @@
 const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
     if (confirmLogoutBtn) {
         confirmLogoutBtn.addEventListener('click', function() {
-            window.location.href = '../controller/logout-controller.php';
+            window.location.href = 'controller/logout-controller.php';
         });
     }

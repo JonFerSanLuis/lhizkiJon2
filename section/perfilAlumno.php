@@ -54,15 +54,7 @@ $accesoBD->cerrarConexion();
                     <i class="bi bi-bell-fill"></i>
                 </button>
             </div>
-            <div class="progress-section">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="progress-text">Aste honetan aurreratua</span>
-                    <span class="progress-percentage">75%</span>
-                </div>
-                <div class="progress custom-progress">
-                    <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
+
         </header>
 
         <div class="missions-card">
@@ -72,15 +64,6 @@ $accesoBD->cerrarConexion();
                     <i class="bi bi-plus-circle"></i>
                 </button>
             </div>
-            <div class="mission-item">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Irakasketa Frogak</span>
-            </div>
-            <div class="mission-item">
-                <i class="bi bi-circle"></i>
-                <span>Parte-hartzea</span>
-            </div>
-
             <?php if ($juego_adivina_activo): ?>
                 <button class="start-game-btn mb-2" onclick="location.href='juegoAdivinaHitza.php'">
                     Hasi Adivina Hitza

@@ -4,29 +4,41 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../model/AccesoBD.php';
 
+// --- INICIO DE LÓGICA PARA GESTIÓN DE JUEGOS ---
+
+// Crear una conexión para manejar los juegos
 $bd_juegos = new AccesoBD();
 
+// Comprobar si se ha enviado un formulario para cambiar el estado de un juego
 if (isset($_POST['accion']) && $_POST['accion'] === 'cambiar_estado_juego') {
     
+    // El ID del juego que se está actualizando
     $id_juego_para_cambiar = $_POST['id_juego'];
     
-    // si el checkbox esta marcado, $_POST['juego_activo'] existirá (y tendra valor "1").
-    // si no está marcado, no existira.
+    // 'juego_activo' es el nombre del checkbox.
+    // Si el checkbox está marcado, $_POST['juego_activo'] existirá (y tendrá valor "1").
+    // Si no está marcado, no existirá.
     
-    $nuevo_estado = 2; // 2 = inactivo (por defecto)
+    $nuevo_estado = 2; // 2 = Inactivo (por defecto)
     if (isset($_POST['juego_activo'])) {
         $nuevo_estado = 1; // 1 = Activo
     }
     
+    // Actualizar la base de datos
     $bd_juegos->actualizarEstadoJuego($id_juego_para_cambiar, $nuevo_estado);
     
-    // recargar la página
+    // Recargar la página para ver el cambio y evitar reenvíos
+    // Esto es simple y un principiante lo haría así
     echo "<meta http-equiv='refresh' content='0'>";
 }
 
+// Obtener la lista de todos los juegos para mostrarlos
 $lista_de_juegos = $bd_juegos->obtenerTodosLosJuegos();
 
+// Cerramos la conexión de juegos (la otra se usa más abajo)
 $bd_juegos->cerrarConexion();
+
+// --- FIN DE LÓGICA PARA GESTIÓN DE JUEGOS ---
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -41,6 +53,13 @@ $bd_juegos->cerrarConexion();
 <body>
     <div class="dashboard-container">
         <div class="header-section">
+            
+            <button type="button" class="btn btn-outline-light" 
+                    style="position: absolute; top: 40px; right: 50px;" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#CerrarSesionModal">
+                <i class="bi bi-box-arrow-right"></i> Irten
+            </button>
             <h1>Irakasleen Panela</h1>
             <p>Ikasleen jarraitzea</p>
         </div>
@@ -59,21 +78,21 @@ $bd_juegos->cerrarConexion();
         }
         ?>
         <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-4">
                 <div class="stats-card blue">
                     <i class="bi bi-people-fill"></i>
                     <div class="number"><?= $stats['num_alumnos'] ?></div>
                     <div class="label">Ikasleek</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-4">
                 <div class="stats-card purple">
                     <i class="bi bi-bar-chart-fill"></i>
                     <div class="number"><?= $stats['porcentaje_participacion'] ?>%</div>
                     <div class="label">Parted.</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-4">
                 <div class="stats-card yellow">
                     <i class="bi bi-check-circle-fill"></i>
                     <div class="number"><?= $stats['num_completados'] ?></div>
@@ -135,7 +154,7 @@ $bd_juegos->cerrarConexion();
             }
             ?>
             
-            <?php if (count($alumnos) > 0): ?>
+             <?php if (count($alumnos) > 0): ?>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -228,11 +247,35 @@ $bd_juegos->cerrarConexion();
         </div>
     </div>
 
+    <div id="CerrarSesion">
+        <div class="modal fade" id="CerrarSesionModal" tabindex="-1" aria-labelledby="CerrarSesionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="CerrarSesionModalLabel">Confirmar Cierre de Sesión</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Estás seguro de que deseas cerrar sesión?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="../js/cerrar-sesion.js"></script>
+
 </body>
 </html>
 
 <?php
+// ... (Procesamiento de edición y eliminación de alumnos se mantiene igual) ...
+// Procesar edición
 if (isset($_POST['editar_usuario'])) {
     $edit_email = $_POST['edit_email'] ?? '';
     $edit_nombre = $_POST['edit_nombre'] ?? '';
@@ -242,10 +285,11 @@ if (isset($_POST['editar_usuario'])) {
         $sql = "UPDATE usuario SET nombre = '" . mysqli_real_escape_string($bd->conexion, $edit_nombre) . "', apellidos = '" . mysqli_real_escape_string($bd->conexion, $edit_apellidos) . "' WHERE email = '" . mysqli_real_escape_string($bd->conexion, $edit_email) . "'";
         $bd->lanzarSQL($sql);
         echo '<div class="alert alert-success">Erabiltzailea eguneratuta!</div>';
-        // recargar pagina
+        // Refrescar la página para ver los cambios
         echo '<meta http-equiv="refresh" content="1">';
     }
 }
+// Procesar eliminación
 if (isset($_POST['eliminar_usuario'])) {
     $delete_email = $_POST['delete_email'] ?? '';
     if ($delete_email) {
@@ -253,7 +297,7 @@ if (isset($_POST['eliminar_usuario'])) {
         $sql = "DELETE FROM usuario WHERE email = '" . mysqli_real_escape_string($bd->conexion, $delete_email) . "'";
         $bd->lanzarSQL($sql);
         echo '<div class="alert alert-danger">Erabiltzailea ezabatuta!</div>';
-        // recargar pagina
+        // Refrescar la página para ver los cambios
         echo '<meta http-equiv="refresh" content="1">';
     }
 }

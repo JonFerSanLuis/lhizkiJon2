@@ -154,3 +154,23 @@ table.bg-gradient-blue th,
 .table tbody td:last-child {
     width: 140px;
 }
+
+/* Modal fixes para prevenir backdrops residuales */
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+/* Asegurar que los modals se cierren correctamente */
+body.modal-open {
+    overflow: hidden;
+}
+
+body:not(.modal-open) {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+/* Eliminar cualquier backdrop huérfano */
+.modal-backdrop:not(.show) {
+    display: none !important;
+}

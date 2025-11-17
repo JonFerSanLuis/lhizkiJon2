@@ -1,363 +1,640 @@
-// centrosAdmin.js - Funcionalidad para la administración de centros educativos
+
+/**
+ * Gestión de Centros Educativos - JavaScript
+ * Funcionalidades: CRUD de centros, modales, validaciones, AJAX
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
+    initializeCentrosAdmin();
+});
+
+/**
+ * Inicializa todos los event listeners y configuraciones
+ */
+function initializeCentrosAdmin() {
+    // Event listeners para los modales
+    setupModalEventListeners();
     
-    // Elementos del DOM
-    const searchInput = document.getElementById('searchCentro');
-    const searchProvincia = document.getElementById('searchProvincia');
-    const searchMunicipio = document.getElementById('searchMunicipio');
-    const searchButton = document.querySelector('.btn-primary');
-    const addCentroButton = document.querySelector('.btn-success');
+    // Event listener para mostrar/ocultar campo de contraseña en edición
+    setupPasswordToggle();
     
-    // Funcionalidad de búsqueda
-    if (searchButton) {
-        searchButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            buscarCentros();
-        });
-    }    // Búsqueda en tiempo real
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            // Debounce para evitar demasiadas búsquedas
-            clearTimeout(this.searchTimeout);
-            this.searchTimeout = setTimeout(buscarCentros, 300);
-        });
-    }
-    
-    // Filtro por provincia
-    if (searchProvincia) {
-        searchProvincia.addEventListener('change', function() {
-            buscarCentros();
-        });
-    }
-    
-    // Búsqueda por municipio
-    if (searchMunicipio) {
-        searchMunicipio.addEventListener('input', function() {
-            // Debounce para evitar demasiadas búsquedas
-            clearTimeout(this.searchTimeout);
-            this.searchTimeout = setTimeout(buscarCentros, 300);
-        });
-    }
-      // Delegación de eventos para botones dinámicos en la tabla
-    const tableBody = document.querySelector('tbody');
-    if (tableBody) {
-        tableBody.addEventListener('click', function(e) {
-            // Botones de editar (detectar por data-bs-target="#editCentroModal")
-            if (e.target.closest('[data-bs-target="#editCentroModal"]')) {
-                const row = e.target.closest('tr');
-                cargarDatosCentro(row);
-            }
-            
-            // Botones de eliminar (detectar por clase btn-danger)
-            if (e.target.closest('.btn-danger')) {
-                const row = e.target.closest('tr');
-                confirmarEliminacion(row);
-            }
+    // Validaciones en tiempo real
+    setupFormValidations();
+      // Event listeners para eliminación
+    setupDeleteEventListeners();
+}
+
+/**
+ * Configura los event listeners de los modales
+ */
+function setupModalEventListeners() {
+    // Botón para agregar centro
+    const btnAddCentro = document.querySelector('[data-bs-target="#addCentroModal"]');
+    if (btnAddCentro) {
+        btnAddCentro.addEventListener('click', function() {
+            clearAddForm();
         });
     }
     
-    // Modal de agregar centro
-    const addModal = document.getElementById('addCentroModal');
-    if (addModal) {
-        addModal.addEventListener('shown.bs.modal', function() {
-            document.getElementById('addCentroNombre').focus();
+    // Botón guardar en modal agregar
+    const btnSaveAdd = document.querySelector('#addCentroModal .btn-success');
+    if (btnSaveAdd) {
+        btnSaveAdd.addEventListener('click', function() {
+            agregarCentro();
         });
     }
     
-    // Botón de guardar nuevo centro
-    const saveButton = document.querySelector('#addCentroModal .btn-success');
-    if (saveButton) {
-        saveButton.addEventListener('click', function() {
-            guardarNuevoCentro();
+    // Botón guardar en modal editar
+    const btnSaveEdit = document.querySelector('#editCentroModal .btn-warning');
+    if (btnSaveEdit) {
+        btnSaveEdit.addEventListener('click', function() {
+            actualizarCentro();
         });
     }
+}
+
+/**
+ * Configura el toggle para mostrar/ocultar campo de contraseña
+ */
+function setupPasswordToggle() {
+    const checkboxPassword = document.getElementById('editChangePassword');
+    const passwordField = document.getElementById('editPasswordField');
     
-    // Botón de guardar cambios
-    const updateButton = document.querySelector('#editCentroModal .btn-warning');
-    if (updateButton) {
-        updateButton.addEventListener('click', function() {
-            guardarCambiosCentro();
-        });
-    }
-    
-    // Funcionalidad para mostrar/ocultar el campo de contraseña en el modal de edición
-    const editChangePasswordCheckbox = document.getElementById('editChangePassword');
-    if (editChangePasswordCheckbox) {
-        editChangePasswordCheckbox.addEventListener('change', function() {
-            const passwordField = document.getElementById('editPasswordField');
+    if (checkboxPassword && passwordField) {
+        checkboxPassword.addEventListener('change', function() {
             if (this.checked) {
                 passwordField.style.display = 'block';
+                document.getElementById('editProfesorPassword').required = true;
             } else {
                 passwordField.style.display = 'none';
+                document.getElementById('editProfesorPassword').required = false;
                 document.getElementById('editProfesorPassword').value = '';
             }
         });
     }
-});
-
-// Función para buscar centros
-function buscarCentros() {
-    const searchTerm = document.getElementById('searchCentro').value;
-    const searchProvinciaValue = document.getElementById('searchProvincia').value;
-    const searchMunicipioValue = document.getElementById('searchMunicipio').value;
-    
-    
-    
-    // Aquí iría la llamada AJAX al servidor
-    // Por ahora solo mostramos en consola
-    filtrarTabla(searchTerm, searchProvinciaValue, searchMunicipioValue);
 }
 
-// Función para filtrar la tabla localmente (mientras no hay backend)
-function filtrarTabla(searchTerm, searchProvincia, searchMunicipio) {
-    const rows = document.querySelectorAll('tbody tr');
+/**
+ * Configura validaciones en tiempo real
+ */
+function setupFormValidations() {
+    // Validación de email en tiempo real
+    const emailInputs = document.querySelectorAll('input[type="email"]');
+    emailInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateEmail(this);
+        });
+    });
     
-    rows.forEach(row => {
-        const nombre = row.cells[1].textContent.toLowerCase();
-        const provincia = row.cells[2].textContent.toLowerCase();
-        const municipio = row.cells[3].textContent.toLowerCase();
-        
-        const matchesNombre = !searchTerm || 
-            nombre.includes(searchTerm.toLowerCase());
+    // Validación de campos requeridos
+    const requiredInputs = document.querySelectorAll('input[required]');
+    requiredInputs.forEach(input => {        input.addEventListener('blur', function() {
+            validateRequired(this);
+        });
+    });
+}
+
+/**
+ * Configura los event listeners para la eliminación de centros
+ */
+function setupDeleteEventListeners() {
+    // Event listener para los botones de eliminar centro
+    document.addEventListener('click', function(event) {
+        if (event.target.closest('.delete-centro')) {
+            const deleteLink = event.target.closest('.delete-centro');
+            const centroId = deleteLink.getAttribute('data-id');
+            const centroName = deleteLink.getAttribute('data-name');
             
-        const matchesProvincia = !searchProvincia || 
-            provincia.includes(searchProvincia.toLowerCase());
+            // Rellenar el modal con los datos del centro
+            document.getElementById('deleteCentroName').textContent = centroName;
             
-        const matchesMunicipio = !searchMunicipio || 
-            municipio.includes(searchMunicipio.toLowerCase());
-        
-        if (matchesNombre && matchesProvincia && matchesMunicipio) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+            // Configurar el botón de confirmación
+            const confirmButton = document.getElementById('confirmDeleteCentro');
+            confirmButton.onclick = function() {
+                eliminarCentro(centroId);
+                // Cerrar el modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteCentroModal'));
+                modal.hide();
+            };
         }
     });
 }
 
-// Función para cargar datos en el modal de edición
-function cargarDatosCentro(row) {
-    const cells = row.cells;
-      // Cargar datos básicos del centro
-    document.getElementById('editCentroId').value = cells[0].textContent.trim();
-    document.getElementById('editCentroNombre').value = cells[1].textContent.trim();
-    document.getElementById('editCentroProvincia').value = cells[2].textContent.trim();
-    document.getElementById('editCentroMunicipio').value = cells[3].textContent.trim();
+/**
+ * Valida campo de email
+ * @param {HTMLElement} input - Input de email
+ */
+function validateEmail(input) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const value = input.value.trim();
     
-    // Cargar email del profesor (ahora la celda 4 contiene el email)
-    const profesorEmail = cells[4].textContent.trim();
-    document.getElementById('editProfesorEmail').value = profesorEmail;
-    
-    // Limpiar campos de nombre y apellidos (se llenarían desde la base de datos en una implementación real)
-    document.getElementById('editProfesorNombre').value = '';
-    document.getElementById('editProfesorApellidos').value = '';
-    document.getElementById('editProfesorEspecialidad').value = '';
-    document.getElementById('editCentroDireccion').value = '';
-    
-    // Resetear checkbox de contraseña
-    const changePasswordCheckbox = document.getElementById('editChangePassword');
-    if (changePasswordCheckbox) {
-        changePasswordCheckbox.checked = false;
-        const passwordField = document.getElementById('editPasswordField');
-        if (passwordField) {
-            passwordField.style.display = 'none';
-        }
-        const passwordInput = document.getElementById('editProfesorPassword');
-        if (passwordInput) {
-            passwordInput.value = '';
-        }
-    }   
-}
-
-// Función para confirmar eliminación
-function confirmarEliminacion(row) {
-    const nombreCentro = row.cells[1].textContent;
-    
-    if (confirm(`¿Estás seguro de que quieres eliminar el centro "${nombreCentro}"?`)) {
-        eliminarCentro(row);
+    if (value && !emailRegex.test(value)) {
+        showInputError(input, 'Email formato ez da zuzena');
+        return false;
+    } else {
+        removeInputError(input);
+        return true;
     }
 }
 
-// Función para eliminar centro
-function eliminarCentro(row) {
-    const id = row.cells[0].textContent;
-    
-    
-    // Aquí iría la llamada AJAX para eliminar
-    // Por ahora solo removemos la fila
-    row.remove();
-    
-    // Mostrar mensaje de éxito
-    mostrarMensaje('Centro eliminado correctamente', 'success');
+/**
+ * Valida campo requerido
+ * @param {HTMLElement} input - Input requerido
+ */
+function validateRequired(input) {
+    if (!input.value.trim()) {
+        showInputError(input, 'Eremu hau derrigorrezkoa da');
+        return false;
+    } else {
+        removeInputError(input);
+        return true;
+    }
 }
 
-// Función para guardar nuevo centro
-/*function guardarNuevoCentro() {
-    const formData = {
-        nombre: document.getElementById('addCentroNombre').value,
-        ubicacion: document.getElementById('addCentroUbicacion').value,
-        tipo: document.getElementById('addCentroTipo').value,
-        telefono: document.getElementById('addCentroTelefono').value,
-        direccion: document.getElementById('addCentroDireccion').value,
-        profesor: {
-            nombre: document.getElementById('addProfesorNombre').value,
-            apellidos: document.getElementById('addProfesorApellidos').value,
-            email: document.getElementById('addProfesorEmail').value,
-            password: document.getElementById('addProfesorPassword').value,
-            especialidad: document.getElementById('addProfesorEspecialidad').value
-        }
-    };
+/**
+ * Muestra error en un input
+ * @param {HTMLElement} input - Input con error
+ * @param {string} message - Mensaje de error
+ */
+function showInputError(input, message) {
+    removeInputError(input); // Limpiar errores previos
     
-    // Validación básica
-    if (!formData.nombre || !formData.ubicacion || !formData.tipo || 
-        !formData.profesor.nombre || !formData.profesor.apellidos || 
-        !formData.profesor.email || !formData.profesor.password) {
-        mostrarMensaje('Por favor, completa todos los campos obligatorios', 'error');
-        return;
-    }
-    
-    // Validar email
-    if (!validarEmail(formData.profesor.email)) {
-        mostrarMensaje('Por favor, ingresa un email válido', 'error');
-        return;
-    }
-    
-    console.log('Guardando nuevo centro:', formData);
-    
-    // Aquí iría la llamada AJAX al servidor
-    // Simular éxito por ahora
-    setTimeout(() => {
-        agregarFilaTabla(formData);
-        limpiarFormulario('addCentroForm');
-        bootstrap.Modal.getInstance(document.getElementById('addCentroModal')).hide();
-        mostrarMensaje('Centro y profesor creados correctamente', 'success');
-    }, 500);
-}*/
-
-// Función para guardar cambios del centro
-/*function guardarCambiosCentro() {
-    const formData = {
-        id: document.getElementById('editCentroId').value,
-        nombre: document.getElementById('editCentroNombre').value,
-        ubicacion: document.getElementById('editCentroUbicacion').value,
-        tipo: document.getElementById('editCentroTipo').value,
-        telefono: document.getElementById('editCentroTelefono').value,
-        direccion: document.getElementById('editCentroDireccion').value,
-        profesor: {
-            nombre: document.getElementById('editProfesorNombre').value,
-            apellidos: document.getElementById('editProfesorApellidos').value,
-            email: document.getElementById('editProfesorEmail').value,
-            especialidad: document.getElementById('editProfesorEspecialidad').value
-        }
-    };
-    
-    // Validación básica
-    if (!formData.nombre || !formData.ubicacion || !formData.tipo || 
-        !formData.profesor.nombre || !formData.profesor.apellidos || 
-        !formData.profesor.email) {
-        mostrarMensaje('Por favor, completa todos los campos obligatorios', 'error');
-        return;
-    }
-    
-    // Si se quiere cambiar la contraseña
-    const changePassword = document.getElementById('editChangePassword').checked;
-    if (changePassword) {
-        formData.profesor.password = document.getElementById('editProfesorPassword').value;
-        if (!formData.profesor.password) {
-            mostrarMensaje('Por favor, ingresa la nueva contraseña', 'error');
-            return;
-        }
-    }
-    
-    console.log('Guardando cambios del centro:', formData);
-    
-    // Aquí iría la llamada AJAX al servidor
-    // Simular éxito por ahora
-    setTimeout(() => {
-        actualizarFilaTabla(formData);
-        bootstrap.Modal.getInstance(document.getElementById('editCentroModal')).hide();
-        mostrarMensaje('Centro actualizado correctamente', 'success');
-    }, 500);
-}*/
-
-// Función para agregar nueva fila a la tabla
-function agregarFilaTabla(data) {
-    const tbody = document.querySelector('tbody');
-    const newRow = document.createElement('tr');
-    
-    // Generar ID ficticio
-    const newId = tbody.children.length + 1;      newRow.innerHTML = `
-        <td>${newId}</td>
-        <td>${data.nombre}</td>
-        <td>${data.provincia}</td>
-        <td>${data.municipio}</td>
-        <td>${data.profesor.email}</td>
-        <td>
-            <button class="btn btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editCentroModal">
-                <i class="fa fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm">
-                <i class="fa fa-trash"></i>
-            </button>
-        </td>
-    `;
-      tbody.appendChild(newRow);
-    
-    // Los event listeners se manejan automáticamente por delegación de eventos
+    input.classList.add('is-invalid');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback';
+    errorDiv.textContent = message;
+    input.parentNode.appendChild(errorDiv);
 }
 
-// Función para actualizar fila existente
-function actualizarFilaTabla(data) {
-    const rows = document.querySelectorAll('tbody tr');
-    
-    rows.forEach(row => {
-        if (row.cells[0].textContent === data.id) {
-            row.cells[1].textContent = data.nombre;
-            row.cells[2].textContent = data.provincia;
-            row.cells[3].textContent = data.municipio;
-            row.cells[4].textContent = data.profesor.email;
-        }
-    });
+/**
+ * Remueve error de un input
+ * @param {HTMLElement} input - Input
+ */
+function removeInputError(input) {
+    input.classList.remove('is-invalid');
+    const errorDiv = input.parentNode.querySelector('.invalid-feedback');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
 }
 
-// Función para limpiar formulario
-function limpiarFormulario(formId) {
-    const form = document.getElementById(formId);
+/**
+ * Limpia el formulario de agregar centro
+ */
+function clearAddForm() {
+    const form = document.getElementById('addCentroForm');
     if (form) {
         form.reset();
+        // Limpiar errores de validación
+        const invalidInputs = form.querySelectorAll('.is-invalid');
+        invalidInputs.forEach(input => removeInputError(input));
     }
 }
 
-// Función para mostrar mensajes
-function mostrarMensaje(mensaje, tipo) {
+/**
+ * Carga los datos de un centro para edición
+ * @param {number} idCentro - ID del centro a editar
+ */
+function cargarDatosCentro(idCentro) {
+    if (!idCentro) {
+        showAlert('Error: ID de centro no válido', 'error');
+        return;
+    }
+    
+    showLoader(true);
+    
+    // Timeout de seguridad para asegurar que el loader se oculte
+    const safetyTimeout = setTimeout(() => {
+        showLoader(false);
+    }, 10000); // 10 segundos
+    
+    // Determinar la ruta correcta del controlador
+    const isInSection = window.location.pathname.includes('section/');
+    const baseUrl = isInSection ? '../controller/' : 'controller/';
+    const url = `${baseUrl}centrosAdmin-controller.php?action=obtener_centro&id=${idCentro}`;
+      fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            }
+            
+            return response.text();
+        })
+        .then(text => {
+            // Intentar parsear como JSON
+            try {
+                const data = JSON.parse(text);
+                
+                if (data.success) {
+                    llenarFormularioEdicion(data.centro);
+                    
+                    const modalElement = document.getElementById('editCentroModal');
+                    
+                    if (modalElement) {
+                        // Ocultar loader ANTES de abrir el modal
+                        showLoader(false);
+                        clearTimeout(safetyTimeout);
+                        
+                        // Pequeño delay para asegurar que el loader se oculte
+                        setTimeout(() => {
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }, 100);
+                    } else {
+                        showAlert('Error: No se encontró el modal de edición', 'error');
+                    }
+                } else {
+                    showAlert(data.message || 'Ez da zentroaren daturik aurkitu', 'error');
+                }            } catch (parseError) {
+                showAlert('Error: Respuesta del servidor no válida', 'error');
+            }
+        })        .catch(error => {
+            showAlert('Errore bat gertatu da zentroaren datuak kargatzean: ' + error.message, 'error');
+        })
+        .finally(() => {
+            clearTimeout(safetyTimeout);
+            showLoader(false);
+        });
+}
+
+/**
+ * Llena el formulario de edición con los datos del centro
+ * @param {Object} centro - Datos del centro
+ */
+function llenarFormularioEdicion(centro) {
+    // Verificar que el objeto centro existe
+    if (!centro) {
+        showAlert('Error: No se recibieron datos del centro', 'error');
+        return;
+    }
+    
+    // Datos del centro
+    const elements = {
+        editCentroId: document.getElementById('editCentroId'),
+        editCentroNombre: document.getElementById('editCentroNombre'),
+        editCentroProvincia: document.getElementById('editCentroProvincia'),
+        editCentroMunicipio: document.getElementById('editCentroMunicipio'),
+        editProfesorNombre: document.getElementById('editProfesorNombre'),
+        editProfesorApellidos: document.getElementById('editProfesorApellidos'),
+        editProfesorEmail: document.getElementById('editProfesorEmail'),
+        editChangePassword: document.getElementById('editChangePassword'),
+        editPasswordField: document.getElementById('editPasswordField'),
+        editProfesorPassword: document.getElementById('editProfesorPassword')
+    };
+    
+    // Verificar elementos críticos
+    const criticalElements = ['editCentroId', 'editCentroNombre', 'editCentroProvincia'];
+    const missingElements = criticalElements.filter(key => !elements[key]);
+    
+    if (missingElements.length > 0) {
+        showAlert('Error: Faltan elementos del formulario: ' + missingElements.join(', '), 'error');
+        return;
+    }
+    
+    try {
+        // Llenar datos del centro
+        if (elements.editCentroId) {
+            elements.editCentroId.value = centro.id_centro || '';
+        }
+        if (elements.editCentroNombre) {
+            elements.editCentroNombre.value = centro.nombre_centro || '';
+        }
+        if (elements.editCentroProvincia) {
+            elements.editCentroProvincia.value = centro.provincia || '';
+        }
+        if (elements.editCentroMunicipio) {
+            elements.editCentroMunicipio.value = centro.municipio || '';
+        }
+        
+        // Llenar datos del profesor
+        if (elements.editProfesorNombre) {
+            elements.editProfesorNombre.value = centro.nombre || '';
+        }
+        if (elements.editProfesorApellidos) {
+            elements.editProfesorApellidos.value = centro.apellidos || '';
+        }
+        if (elements.editProfesorEmail) {
+            elements.editProfesorEmail.value = centro.email || '';
+        }
+        
+        // Reset password field
+        if (elements.editChangePassword) elements.editChangePassword.checked = false;
+        if (elements.editPasswordField) elements.editPasswordField.style.display = 'none';
+        if (elements.editProfesorPassword) {
+            elements.editProfesorPassword.value = '';
+            elements.editProfesorPassword.required = false;
+        }
+        
+        // Limpiar errores previos
+        const form = document.getElementById('editCentroForm');
+        if (form) {
+            const invalidInputs = form.querySelectorAll('.is-invalid');
+            invalidInputs.forEach(input => removeInputError(input));
+        }
+          } catch (error) {
+        showAlert('Error al llenar el formulario: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Agrega un nuevo centro
+ */
+function agregarCentro() {
+    const form = document.getElementById('addCentroForm');
+    
+    // Validar formulario
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    // Recopilar datos
+    const formData = new FormData();
+    formData.append('action', 'agregar_centro');
+    formData.append('nombre', document.getElementById('addCentroNombre').value.trim());
+    formData.append('provincia', document.getElementById('addCentroProvincia').value.trim());
+    formData.append('municipio', document.getElementById('addCentroMunicipio').value.trim());    formData.append('profesor_nombre', document.getElementById('addProfesorNombre').value.trim());
+    formData.append('profesor_apellidos', document.getElementById('addProfesorApellidos').value.trim());
+    formData.append('profesor_email', document.getElementById('addProfesorEmail').value.trim());
+    formData.append('profesor_password', document.getElementById('addProfesorPassword').value);
+    
+    showLoader(true);
+    
+    // Determinar la ruta correcta del controlador
+    const baseUrl = window.location.pathname.includes('section/') ? '../controller/' : 'controller/';
+    const url = `${baseUrl}centrosAdmin-controller.php`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Zentroa behar bezala sortu da', 'success');
+            
+            // Cerrar modal y recargar página
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addCentroModal'));
+            modal.hide();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Errore bat gertatu da zentroa sortzerakoan', 'error');
+        }
+    })    .catch(error => {
+        showAlert('Errore bat gertatu da zentroa sortzerakoan', 'error');
+    })
+    .finally(() => {
+        showLoader(false);
+    });
+}
+
+/**
+ * Actualiza un centro existente
+ */
+function actualizarCentro() {
+    const form = document.getElementById('editCentroForm');
+    
+    // Validar formulario
+    if (!validateForm(form)) {
+        return;
+    }
+    
+    // Recopilar datos
+    const formData = new FormData();
+    formData.append('action', 'actualizar_centro');
+    formData.append('id', document.getElementById('editCentroId').value);
+    formData.append('nombre', document.getElementById('editCentroNombre').value.trim());
+    formData.append('provincia', document.getElementById('editCentroProvincia').value.trim());
+    formData.append('municipio', document.getElementById('editCentroMunicipio').value.trim());
+    formData.append('profesor_nombre', document.getElementById('editProfesorNombre').value.trim());
+    formData.append('profesor_apellidos', document.getElementById('editProfesorApellidos').value.trim());
+    formData.append('profesor_email', document.getElementById('editProfesorEmail').value.trim());
+    
+    // Solo enviar nueva contraseña si se marcó el checkbox
+    if (document.getElementById('editChangePassword').checked) {
+        formData.append('nueva_password', document.getElementById('editProfesorPassword').value);
+    }
+    
+    showLoader(true);
+    
+    // Determinar la ruta correcta del controlador
+    const baseUrl = window.location.pathname.includes('section/') ? '../controller/' : 'controller/';
+    const url = `${baseUrl}centrosAdmin-controller.php`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Zentroa behar bezala eguneratu da', 'success');
+            
+            // Cerrar modal y recargar página
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editCentroModal'));
+            modal.hide();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Errore bat gertatu da zentroa eguneratzean', 'error');
+        }
+    })    .catch(error => {
+        showAlert('Errore bat gertatu da zentroa eguneratzean', 'error');
+    })
+    .finally(() => {
+        showLoader(false);
+    });
+}
+
+/**
+ * Elimina un centro
+ * @param {number} idCentro - ID del centro a eliminar
+ */
+function eliminarCentro(idCentro) {
+    const formData = new FormData();
+    formData.append('action', 'eliminar_centro');
+    formData.append('id', idCentro);
+    
+    showLoader(true);
+    
+    // Determinar la ruta correcta del controlador
+    const baseUrl = window.location.pathname.includes('section/') ? '../controller/' : 'controller/';
+    const url = `${baseUrl}centrosAdmin-controller.php`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Zentroa behar bezala ezabatu da', 'success');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Errore bat gertatu da zentroa ezabatzerakoan', 'error');
+        }
+    })    .catch(error => {
+        showAlert('Errore bat gertatu da zentroa ezabatzerakoan', 'error');
+    })
+    .finally(() => {
+        showLoader(false);
+    });
+}
+
+/**
+ * Valida un formulario completo
+ * @param {HTMLFormElement} form - Formulario a validar
+ * @returns {boolean} - True si el formulario es válido
+ */
+function validateForm(form) {
+    let isValid = true;
+    
+    // Validar campos requeridos
+    const requiredInputs = form.querySelectorAll('input[required]');
+    requiredInputs.forEach(input => {
+        if (!validateRequired(input)) {
+            isValid = false;
+        }
+    });
+    
+    // Validar emails
+    const emailInputs = form.querySelectorAll('input[type="email"]');
+    emailInputs.forEach(input => {
+        if (input.value && !validateEmail(input)) {
+            isValid = false;
+        }
+    });
+    
+    // Validaciones específicas
+    const password = form.querySelector('input[type="password"]');
+    if (password && password.required && password.value.length < 6) {
+        showInputError(password, 'Pasahitzak gutxienez 6 karaktere izan behar ditu');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+/**
+ * Muestra un mensaje de alerta
+ * @param {string} message - Mensaje a mostrar
+ * @param {string} type - Tipo de alerta (success, error, warning, info)
+ */
+function showAlert(message, type = 'info') {
     // Crear elemento de alerta
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${tipo === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed`;
-    alert.style.top = '20px';
-    alert.style.right = '20px';
-    alert.style.zIndex = '9999';
-    alert.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${getBootstrapAlertType(type)} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    
+    alertDiv.innerHTML = `
+        <i class="fas ${getAlertIcon(type)} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
-    document.body.appendChild(alert);
+    // Añadir al DOM
+    document.body.appendChild(alertDiv);
     
-    // Auto-remover después de 5 segundos
+    // Auto-eliminar después de 5 segundos
     setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
         }
     }, 5000);
 }
 
-// Función para validar email
-function validarEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+/**
+ * Convierte tipo de alerta a clase Bootstrap
+ * @param {string} type - Tipo de alerta
+ * @returns {string} - Clase Bootstrap correspondiente
+ */
+function getBootstrapAlertType(type) {
+    switch (type) {
+        case 'success': return 'success';
+        case 'error': return 'danger';
+        case 'warning': return 'warning';
+        case 'info': return 'info';
+        default: return 'info';
+    }
 }
 
-// Función para capitalizar primera letra
-function capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+/**
+ * Obtiene icono para el tipo de alerta
+ * @param {string} type - Tipo de alerta
+ * @returns {string} - Clase del icono
+ */
+function getAlertIcon(type) {
+    switch (type) {
+        case 'success': return 'fa-check-circle';
+        case 'error': return 'fa-exclamation-triangle';
+        case 'warning': return 'fa-exclamation-circle';
+        case 'info': return 'fa-info-circle';
+        default: return 'fa-info-circle';
+    }
 }
+
+/**
+ * Muestra/oculta loader
+ * @param {boolean} show - Mostrar o ocultar loader
+ */
+function showLoader(show) {
+    let loader = document.getElementById('globalLoader');
+    
+    if (show) {
+        if (!loader) {
+            // Crear loader si no existe
+            loader = document.createElement('div');
+            loader.id = 'globalLoader';
+            loader.className = 'position-fixed d-flex justify-content-center align-items-center';
+            loader.style.cssText = `
+                top: 0; left: 0; width: 100%; height: 100%; 
+                background-color: rgba(0,0,0,0.5); z-index: 1040;
+            `;
+            loader.innerHTML = `
+                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Kargatzen...</span>
+                </div>
+            `;
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    } else {
+        if (loader) {
+            loader.style.display = 'none';
+            // Opcional: remover el loader del DOM después de ocultarlo
+            setTimeout(() => {
+                if (loader && loader.parentNode) {
+                    loader.remove();
+                }
+            }, 100);
+        }
+    }
+}
+
+/**
+ * Inicializa tooltips (si están disponibles)
+ */
+function initTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-tip]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        }
+    });
+}
+
+// Inicializar tooltips cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initTooltips();
+});
+
+// Exponer funciones globales necesarias
+window.cargarDatosCentro = cargarDatosCentro;
+window.eliminarCentro = eliminarCentro;

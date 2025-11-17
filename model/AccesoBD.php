@@ -293,7 +293,63 @@ class AccesoBD
         return $usuarios;
     }
 
-    function editarUsuario($id_usuario, $nombre, $apellidos, $email, $id_centro, $id_ciclo, $puntos_totales) {
+    function contarUsuarios($buscar_usuario = '', $id_centro = '', $id_ciclo = '') {
+        $where = [];
+        if (!empty($buscar_usuario)) {
+            $buscar_usuario = mysqli_real_escape_string($this->conexion, $buscar_usuario);
+            $where[] = "(u.nombre LIKE '%$buscar_usuario%' OR u.apellidos LIKE '%$buscar_usuario%' OR u.email LIKE '%$buscar_usuario%')";
+        }
+        if (!empty($id_centro) && $id_centro != 'default') {
+            $id_centro = (int)$id_centro;
+            $where[] = "u.id_centro = $id_centro";
+        }
+        if (!empty($id_ciclo) && $id_ciclo != 'default') {
+            $id_ciclo = (int)$id_ciclo;
+            $where[] = "u.id_ciclo = $id_ciclo";
+        }
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+        $query = "SELECT COUNT(*) as total FROM usuario u $whereClause";
+        $result = mysqli_query($this->conexion, $query);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (int)$row['total'];
+        }
+        return 0;
+    }
+
+    function obtenerUsuariosFiltrados($buscar_usuario = '', $id_centro = '', $id_ciclo = '', $limite = 5, $offset = 0) {
+        $where = [];
+        if (!empty($buscar_usuario)) {
+            $buscar_usuario = mysqli_real_escape_string($this->conexion, $buscar_usuario);
+            $where[] = "(u.nombre LIKE '%$buscar_usuario%' OR u.apellidos LIKE '%$buscar_usuario%' OR u.email LIKE '%$buscar_usuario%')";
+        }
+        if (!empty($id_centro) && $id_centro != 'default') {
+            $id_centro = (int)$id_centro;
+            $where[] = "u.id_centro = $id_centro";
+        }
+        if (!empty($id_ciclo) && $id_ciclo != 'default') {
+            $id_ciclo = (int)$id_ciclo;
+            $where[] = "u.id_ciclo = $id_ciclo";
+        }
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+        $query = "SELECT u.id_usuario, u.nombre, u.apellidos, u.email, u.id_centro, u.id_ciclo, c.nombre_centro, cf.nombre_ciclo, u.puntos_totales 
+        FROM usuario u
+        LEFT JOIN centro_educativo c ON u.id_centro = c.id_centro
+        LEFT JOIN ciclo_formativo cf ON u.id_ciclo = cf.id_ciclo
+        $whereClause
+        ORDER BY u.id_usuario ASC
+        LIMIT $limite OFFSET $offset";
+        $result = mysqli_query($this->conexion, $query);
+        $usuarios = array();
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $usuarios[] = $row;
+            }
+        }
+        return $usuarios;
+    }
+
+    function editarUsuario($id_usuario, $nombre, $apellidos, $email, $id_centro, $id_ciclo, $puntos_totales, $password = null) {
         $id_usuario = (int)$id_usuario;
         $nombre = mysqli_real_escape_string($this->conexion, trim($nombre));
         $apellidos = mysqli_real_escape_string($this->conexion, trim($apellidos));
@@ -302,14 +358,29 @@ class AccesoBD
         $id_ciclo = (int)$id_ciclo;
         $puntos_totales = (int)$puntos_totales;
 
-        $sql = "UPDATE usuario 
-                SET nombre = '$nombre', 
-                    apellidos = '$apellidos', 
-                    email = '$email', 
-                    id_centro = $id_centro, 
-                    id_ciclo = $id_ciclo, 
-                    puntos_totales = $puntos_totales 
-                WHERE id_usuario = $id_usuario";
+        // Si se proporciona una nueva contraseña, incluirla en la actualización
+        if ($password !== null && !empty(trim($password))) {
+            $password_hash = password_hash(trim($password), PASSWORD_DEFAULT);
+            $sql = "UPDATE usuario 
+                    SET nombre = '$nombre', 
+                        apellidos = '$apellidos', 
+                        email = '$email', 
+                        password = '$password_hash',
+                        id_centro = $id_centro, 
+                        id_ciclo = $id_ciclo, 
+                        puntos_totales = $puntos_totales 
+                    WHERE id_usuario = $id_usuario";
+        } else {
+            // Si no se cambia la contraseña, mantener la actual
+            $sql = "UPDATE usuario 
+                    SET nombre = '$nombre', 
+                        apellidos = '$apellidos', 
+                        email = '$email', 
+                        id_centro = $id_centro, 
+                        id_ciclo = $id_ciclo, 
+                        puntos_totales = $puntos_totales 
+                    WHERE id_usuario = $id_usuario";
+        }
 
         $resultado = mysqli_query($this->conexion, $sql);
 
@@ -527,4 +598,182 @@ class AccesoBD
         // Si no se encuentra el juego o está inactivo, devuelve false
         return false;
     }
+     function obtenerJuegos() {
+        $result = mysqli_query($this->conexion, 'SELECT id_juego, titulo FROM juego ORDER BY titulo');
+        $juegos = array();
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $juegos[] = $row;
+            }
+        }
+        
+        return $juegos;
+    }
+    
+    /**
+     * Obtener partidas para el panel de administración con filtros
+     * @param array $filtros - Filtros de búsqueda (buscar_usuario, id_juego, completado)
+     * @param int $limit - Límite de resultados
+     * @param int $offset - Desplazamiento para paginación
+     * @return array - Array de partidas con información del usuario y juego
+     */
+    function obtenerPartidasAdmin($filtros = [], $limit = 10, $offset = 0) {
+        // Construir las condiciones WHERE dinámicamente
+        $where_conditions = [];
+        $params = [];
+        $types = "";
+
+        if (!empty($filtros['buscar_usuario'])) {
+            $where_conditions[] = "(u.nombre LIKE ? OR u.apellidos LIKE ? OR u.email LIKE ?)";
+            $search_term = "%" . $filtros['buscar_usuario'] . "%";
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $types .= "sss";
+        }
+
+        if (!empty($filtros['id_juego']) && $filtros['id_juego'] !== 'default') {
+            $where_conditions[] = "r.id_juego = ?";
+            $params[] = $filtros['id_juego'];
+            $types .= "i";
+        }
+
+        if (isset($filtros['completado']) && $filtros['completado'] !== 'default') {
+            $where_conditions[] = "r.completado = ?";
+            $params[] = (int)$filtros['completado'];
+            $types .= "i";
+        }
+
+        $where_clause = !empty($where_conditions) ? " WHERE " . implode(" AND ", $where_conditions) : "";
+        
+        $sql = "SELECT r.*, 
+                       u.nombre AS usuario_nombre, 
+                       u.apellidos AS usuario_apellidos,
+                       u.email AS usuario_email,
+                       j.titulo AS juego_titulo
+                FROM resultado r 
+                LEFT JOIN usuario u ON r.id_usuario = u.id_usuario 
+                LEFT JOIN juego j ON r.id_juego = j.id_juego" . 
+                $where_clause . 
+                " ORDER BY r.fecha_realizacion DESC LIMIT ? OFFSET ?";
+
+        // Debug: Log de la consulta SQL
+        error_log("DEBUG obtenerPartidasAdmin SQL: " . $sql);
+        error_log("DEBUG obtenerPartidasAdmin params: " . print_r($params, true));
+        error_log("DEBUG obtenerPartidasAdmin types: " . $types);
+        
+        $stmt = mysqli_prepare($this->conexion, $sql);
+        
+        if (!$stmt) {
+            error_log("ERROR mysqli_prepare: " . mysqli_error($this->conexion));
+            return [];
+        }
+        
+        // Agregar limit y offset al final de los parámetros
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+        
+        // Siempre hacer bind_param porque siempre tenemos al menos limit y offset
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            error_log("ERROR mysqli_stmt_execute: " . mysqli_stmt_error($stmt));
+            return [];
+        }
+        
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if (!$result) {
+            error_log("ERROR mysqli_stmt_get_result: " . mysqli_error($this->conexion));
+            return [];
+        }
+        
+        error_log("DEBUG obtenerPartidasAdmin rows: " . mysqli_num_rows($result));
+        
+        $partidas = array();
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $partidas[] = $row;
+            }
+        }
+        
+        return $partidas;
+    }
+    
+    /**
+     * Obtener el total de partidas con filtros aplicados
+     * @param array $filtros - Filtros de búsqueda
+     * @return int - Número total de partidas que cumplen los filtros
+     */
+    function obtenerTotalPartidasAdmin($filtros = []) {
+        // Construir las condiciones WHERE dinámicamente
+        $where_conditions = [];
+        $params = [];
+        $types = "";
+
+        if (!empty($filtros['buscar_usuario'])) {
+            $where_conditions[] = "(u.nombre LIKE ? OR u.apellidos LIKE ? OR u.email LIKE ?)";
+            $search_term = "%" . $filtros['buscar_usuario'] . "%";
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $types .= "sss";
+        }
+
+        if (!empty($filtros['id_juego']) && $filtros['id_juego'] !== 'default') {
+            $where_conditions[] = "r.id_juego = ?";
+            $params[] = $filtros['id_juego'];
+            $types .= "i";
+        }
+
+        if (isset($filtros['completado']) && $filtros['completado'] !== 'default') {
+            $where_conditions[] = "r.completado = ?";
+            $params[] = (int)$filtros['completado'];
+            $types .= "i";
+        }
+
+        $where_clause = !empty($where_conditions) ? " WHERE " . implode(" AND ", $where_conditions) : "";
+        
+        $sql = "SELECT COUNT(*) as total
+                FROM resultado r 
+                LEFT JOIN usuario u ON r.id_usuario = u.id_usuario 
+                LEFT JOIN juego j ON r.id_juego = j.id_juego" . $where_clause;
+
+        $stmt = mysqli_prepare($this->conexion, $sql);
+        
+        if (!empty($params)) {
+            mysqli_stmt_bind_param($stmt, $types, ...$params);
+        }
+        
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            return (int)$row['total'];
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Eliminar una partida (resultado) de la base de datos
+     * @param int $id_resultado - ID del resultado a eliminar
+     * @return bool - true si se eliminó correctamente, false en caso contrario
+     */
+    function eliminarPartida($id_resultado) {
+        $id_resultado = (int)$id_resultado;
+        $sql = "DELETE FROM resultado WHERE id_resultado = $id_resultado";
+        
+        $resultado = mysqli_query($this->conexion, $sql);
+        
+        if ($resultado) {
+            return mysqli_affected_rows($this->conexion) > 0;
+        }
+        
+        return false;
+    }
+
 }
