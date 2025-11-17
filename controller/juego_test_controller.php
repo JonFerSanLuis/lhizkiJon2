@@ -73,19 +73,42 @@ function guardarResultado($accesoBD, $usuario) {
     $completado = ($aciertos + $fallos >= 10) ? 1 : 0;
 
     $id_usuario = $usuario->getIdUsuario();
-    $id_juego = 2;
+    $id_juego = 2; // ID del juego de Test
     $fecha_actual = date('Y-m-d H:i:s');
-
-    $puntos_ganados = $aciertos * 100;
-
+    
+    // comprueba si el usuario ya ha jugado a este juego en los últimos 7 días
+    $sql_check = "SELECT COUNT(*) as total 
+                  FROM resultado 
+                  WHERE id_usuario = $id_usuario 
+                  AND id_juego = $id_juego 
+                  AND fecha_realizacion >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                  
+    $res_check = $accesoBD->lanzarSQL($sql_check);
+    $haJugadoEstaSemana = false;
+    
+    if ($res_check && mysqli_num_rows($res_check) > 0) {
+        $fila_check = mysqli_fetch_assoc($res_check);
+        if ($fila_check['total'] > 0) {
+            $haJugadoEstaSemana = true;
+        }
+    }
+    // calcular puntos solo si es la primera vez esta semana
+    $puntos_ganados = 0;
+    if (!$haJugadoEstaSemana) {
+        $puntos_ganados = $aciertos * 100;
+    }
+    
     $sql = "INSERT INTO resultado (id_usuario, id_juego, aciertos, fallos, tiempo_empleado, fecha_realizacion, completado)
             VALUES ($id_usuario, $id_juego, $aciertos, $fallos, $tiempo_empleado, '$fecha_actual', $completado)";
 
     $resultado = $accesoBD->lanzarSQL($sql);
 
     if ($resultado) {
-        $sql_update = "UPDATE usuario SET puntos_totales = puntos_totales + $puntos_ganados WHERE id_usuario = $id_usuario";
-        $accesoBD->lanzarSQL($sql_update);
+        // actualiza puntos totales del usuario solo si es la primera vez que juega y ha acertado minimo 1 vez
+        if (!$haJugadoEstaSemana && $puntos_ganados > 0) {
+            $sql_update = "UPDATE usuario SET puntos_totales = puntos_totales + $puntos_ganados WHERE id_usuario = $id_usuario";
+            $accesoBD->lanzarSQL($sql_update);
+        }
 
         echo json_encode([
             'success' => true,

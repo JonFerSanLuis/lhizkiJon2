@@ -175,9 +175,8 @@ if (isset($_GET['error'])) {
                             </td>                            <td>
                                 <ul class="action-list">
                                     <li>
-                                        <a href="#" data-tip="delete" data-id="<?= $partida['id_resultado'] ?>" 
-                                           aria-label="Partida ezabatu" 
-                                           onclick="mostrarModalEliminar(<?= $partida['id_resultado'] ?>, '<?= htmlspecialchars($partida['usuario_nombre'], ENT_QUOTES) ?>')">
+                                        <a href="#" class="delete-partida-btn" data-tip="delete" data-id="<?= $partida['id_resultado'] ?>" 
+                                           aria-label="Partida ezabatu">
                                             <i class="fa fa-trash"></i>
                                         </a>
                                     </li>
@@ -196,7 +195,8 @@ if (isset($_GET['error'])) {
                             <?php endif; ?>
                         </td>
                     </tr>
-                <?php endif; ?>            </tbody>    
+                <?php endif; ?>            
+            </tbody>    
         </table>
     </div>
     <div class="panel-footer text-blue">
@@ -243,34 +243,26 @@ if (isset($_GET['error'])) {
     </div>
 </div>
 
-<!-- Modal para borrar partida -->
-<div class="modal fade" id="BorrarPartidaModal" tabindex="-1" aria-labelledby="BorrarPartidaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Modal: Confirmar borrado de partida (nuevo) -->
+<div class="modal fade" id="confirmDeleteResultModal" tabindex="-1" aria-labelledby="confirmDeleteResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="BorrarPartidaModalLabel">Partida Ezabatzea Berretsi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="confirmDeleteResultModalLabel">Ezabatu partida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Itxi"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>¡Atención!</strong> Partida hau behin betiko ezabatuko da.
-                </div>
-                <p class="text-danger mb-0">
-                    <strong>Ekintza hau ezin da desegin.</strong> Ziur zaude jarraitu nahi duzula?
-                </p>
+                <p class="mb-2">Ziur zaude partida hau ezabatu nahi duzula?</p>
+                <small class="text-danger d-block">Ekintza atzeraezina da.</small>
+                <input type="hidden" id="deleteResultId" value="">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Utzi</button>
-                <form id="deletePartidaForm" method="POST" action="./controller/partidasAdmin-controller.php" style="display:inline;">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="id_resultado" id="deletePartidaId" value="">
-                    <button type="button" class="btn btn-danger" id="confirmDeletePartidaBtn">Partida Ezabatu</button>
-                </form>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Utzi</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteResultBtn">Ezabatu</button>
             </div>
         </div>
     </div>
-</div>
+ </div>
 
 <!-- Script específico de partidasAdmin -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

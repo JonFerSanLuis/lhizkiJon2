@@ -90,23 +90,49 @@ function guardarResultado($accesoBD, $usuario) {
     $id_juego = 1; // ID de juego genérico para este tipo de partida
     $fecha_actual = date('Y-m-d H:i:s');
     
-    // Calcular puntos (100 puntos por acierto)
-    $puntos_ganados = $aciertos * 100;
+    // --- INICIO DE LA NUEVA LÓGICA ---
     
-    // Insertar resultado
+    // 1. Comprobar si el usuario ya ha jugado a este juego en los últimos 7 días
+    $sql_check = "SELECT COUNT(*) as total 
+                  FROM resultado 
+                  WHERE id_usuario = $id_usuario 
+                  AND id_juego = $id_juego 
+                  AND fecha_realizacion >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                  
+    $res_check = $accesoBD->lanzarSQL($sql_check);
+    $haJugadoEstaSemana = false;
+    
+    if ($res_check && mysqli_num_rows($res_check) > 0) {
+        $fila_check = mysqli_fetch_assoc($res_check);
+        if ($fila_check['total'] > 0) {
+            $haJugadoEstaSemana = true;
+        }
+    }
+
+    // 2. Calcular puntos solo si es la primera vez esta semana
+    $puntos_ganados = 0;
+    if (!$haJugadoEstaSemana) {
+        $puntos_ganados = $aciertos * 100;
+    }
+    
+    // --- FIN DE LA NUEVA LÓGICA ---
+    
+    // Insertar resultado (esto se hace siempre, para el historial)
     $sql = "INSERT INTO resultado (id_usuario, id_juego, aciertos, fallos, tiempo_empleado, fecha_realizacion, completado) 
             VALUES ($id_usuario, $id_juego, $aciertos, $fallos, $tiempo_empleado, '$fecha_actual', $completado)";
     
     $resultado = $accesoBD->lanzarSQL($sql);
     
     if ($resultado) {
-        // Actualizar puntos totales del usuario
-        $sql_update = "UPDATE usuario SET puntos_totales = puntos_totales + $puntos_ganados WHERE id_usuario = $id_usuario";
-        $accesoBD->lanzarSQL($sql_update);
+        // 3. Actualizar puntos totales del usuario SOLO si es la primera vez y ganó puntos
+        if (!$haJugadoEstaSemana && $puntos_ganados > 0) {
+            $sql_update = "UPDATE usuario SET puntos_totales = puntos_totales + $puntos_ganados WHERE id_usuario = $id_usuario";
+            $accesoBD->lanzarSQL($sql_update);
+        }
         
         echo json_encode([
             'success' => true,
-            'puntos_ganados' => $puntos_ganados,
+            'puntos_ganados' => $puntos_ganados, // El JS recibirá 0 si ya ha jugado
             'mensaje' => 'Emaitza gorde da!'
         ]);
     } else {

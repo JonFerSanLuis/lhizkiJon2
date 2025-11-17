@@ -2,56 +2,7 @@
 //require_once 'config.php';
 session_start();
 
-// comprobar sesion y rol admin de forma robusta
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
 
-// requiere que exista un identificador de usuario / marca de login y el rol
-if (empty($_SESSION['user_id']) && empty($_SESSION['loggedin'])) {
-    header('Location: login.php');
-    exit();
-}
-if (empty($_SESSION['user_role'])) {
-    header('Location: login.php');
-    exit();
-}
-
-// redirigir inmediatamente si no es admin
-if ($_SESSION['user_role'] !== 'admin') {
-    switch ($_SESSION['user_role']) {
-        case 'user':
-            header('Location: indexUser.php');
-            break;
-        case 'guest':
-            header('Location: indexGuest.php');
-            break;
-        default:
-            header('Location: login.php');
-            break;
-    }
-    exit();
-}
-
-// lista blanca de paginas permitidas para admin
-$allowed_pages = ['homeAdmin', 'usuariosAdmin', 'partidasAdmin', 'centrosAdmin'];
-
-// tomar la pagina solicitada y normalizarla
-$page = isset($_GET['page']) ? basename($_GET['page']) : 'homeAdmin';
-if (!in_array($page, $allowed_pages, true)) {
-    $page = 'homeAdmin';
-}
-
-// sobrescribir $_GET['page'] con el valor validado para evitar que
-// el include posterior use un valor no validado (previene LFI/escapes)
-$_GET['page'] = $page;
-$pageValidated = $page; // por si quieres usar la variable directamente mas adelante
-
-// opcional: regenerar id de sesion al entrar al panel (mejora contra fixation)
-if (empty($_SESSION['session_hardener'])) {
-    session_regenerate_id(true);
-    $_SESSION['session_hardener'] = 1;
-}
 ?>
 
 <!DOCTYPE html>
@@ -77,7 +28,8 @@ if (empty($_SESSION['session_hardener'])) {
             <div class="row">                   
                 <p class=" text-white-50 h5">Sistema kudeaketa</p>
             </div>
-        </div>        <div class="d-flex justify-content-between align-items-center">
+        </div>        
+        <div class="d-flex justify-content-between align-items-center">
             <nav class="nav nav-pills nav-fill bg-opacity-10 rounded-top p-2 flex-grow-1">
                 <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=homeAdmin">Home</a>
                 <a class="nav-link text-white bg-opacity-10" href="indexAdmin.php?page=usuariosAdmin">Usuarioak</a>

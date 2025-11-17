@@ -124,6 +124,7 @@ $accesoBD->cerrarConexion();
                 </div>
                 <div class="feature-title">Glosarioak</div>
                 <div class="feature-subtitle">Zure hitz-zerrenda</div>
+                <a href="glosario.php" class="stretched-link" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;"></a>
             </div>
 
             <div class="feature-card">

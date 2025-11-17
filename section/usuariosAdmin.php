@@ -265,11 +265,41 @@ $end = min($pagina * $limite, $total);
             </div>
             <div class="modal-body">
                 <p>Ziur zaude <strong id="deleteUserName"></strong> erabiltzailea ezabatu nahi duzula?</p>
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <small>Ekintza hau ezin da desegin. Erabiltzailearen datu guztiak ezabatuko dira.</small>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Utzi</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Ezabatu</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Utzi
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser">
+                    <i class="fas fa-trash me-1"></i>Ezabatu
+                </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenedor de notificaciones Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>
+                <span id="successMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
 </div>

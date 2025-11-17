@@ -6,11 +6,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const cicloSelect = document.getElementById('editUserCiclo');
   const deleteUserName = document.getElementById('deleteUserName');
   const controllerUrl = window.usuariosAdmin && window.usuariosAdmin.controllerUrl ? window.usuariosAdmin.controllerUrl : '../controller/usuariosAdmin-controller.php';
-  const editModal = editModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(editModalElement) : null;
-  const deleteModal = deleteModalElement && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(deleteModalElement) : null;
+  const editModal = editModalElement && typeof bootstrap !== 'undefined' ? bootstrap.Modal.getOrCreateInstance(editModalElement) : null;
+  const deleteModal = deleteModalElement && typeof bootstrap !== 'undefined' ? bootstrap.Modal.getOrCreateInstance(deleteModalElement) : null;
   let deleteTargetId = null;
   let deleteTargetRow = null;
   let editingRow = null;
+
+  // Función para mostrar notificaciones toast
+  function showToast(type, message) {
+    const toastElement = document.getElementById(type === 'success' ? 'successToast' : 'errorToast');
+    const messageElement = document.getElementById(type === 'success' ? 'successMessage' : 'errorMessage');
+    
+    if (toastElement && messageElement) {
+      messageElement.textContent = message;
+      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
+    }
+  }
 
   document.querySelectorAll('.edit-user').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
@@ -85,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
           console.log('Respuesta cruda del servidor:', data);
           if (data.success) {
-            alert('Erabiltzailea eguneratu da!');
             if (editModal) {
               editModal.hide();
             }
@@ -101,13 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 cicloNombre: getSelectedOptionText(cicloSelect)
               });
             }
+            showToast('success', 'Erabiltzailea eguneratu da!');
           } else {
-            alert('Errorea: ' + data.message);
+            showToast('error', 'Errorea: ' + data.message);
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Errorea gertatu da');
+          showToast('error', 'Errorea gertatu da zerbitzariarekin konexioa egitean');
         });
     });
   }
@@ -142,6 +154,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      // Guardar referencias locales antes de que se limpien
+      const rowToDelete = deleteTargetRow;
+      
       const formData = new FormData();
       formData.append('action', 'eliminarUsuario');
       formData.append('id_usuario', deleteTargetId);
@@ -153,24 +168,38 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Erabiltzailea ezabatu da!');
+            // Ocultar el modal primero
             if (deleteModal) {
               deleteModal.hide();
             }
-            if (deleteTargetRow) {
-              deleteTargetRow.remove();
-            }
+            // Esperar a que el modal se cierre completamente
+            setTimeout(() => {
+              // Eliminar la fila de la tabla usando la referencia local
+              if (rowToDelete) {
+                rowToDelete.remove();
+              }
+              // Mostrar mensaje de éxito
+              showToast('success', 'Erabiltzailea ezabatu da!');
+            }, 300);
           } else {
-            alert('Errorea: ' + data.message);
+            // Error al eliminar - NO eliminar la fila, solo mostrar error
+            if (deleteModal) {
+              deleteModal.hide();
+            }
+            setTimeout(() => {
+              showToast('error', 'Errorea ezabatzean: ' + data.message);
+            }, 300);
           }
-          // Limpiar después de cualquier resultado
-          cleanupDeleteModal();
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Errorea gertatu da');
-          // Limpiar después de error también
-          cleanupDeleteModal();
+          // En caso de error de red, cerrar modal pero NO eliminar la fila
+          if (deleteModal) {
+            deleteModal.hide();
+          }
+          setTimeout(() => {
+            showToast('error', 'Errorea gertatu da zerbitzariarekin konexioa egitean');
+          }, 300);
         });
     });
   }
@@ -182,13 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (deleteUserName) {
       deleteUserName.textContent = '';
     }
-    // Asegurar que no queden backdrops
-    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-      backdrop.remove();
-    });
-    // Restaurar scroll del body
-    document.body.classList.remove('modal-open');
-    document.body.style.paddingRight = '';
+    forceCleanBackdrops();
   }
   if (deleteModalElement) {
     // Evento cuando el modal se oculta completamente
@@ -206,13 +229,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Agregar event listener específico para el botón cancelar del modal de eliminar
-  const cancelDeleteBtn = deleteModalElement ? deleteModalElement.querySelector('[data-bs-dismiss="modal"]') : null;
-  if (cancelDeleteBtn) {
-    cancelDeleteBtn.addEventListener('click', function() {
-      if (deleteModal) {
-        deleteModal.hide();
-      }
-      cleanupDeleteModal();
+  const deleteDismissButtons = deleteModalElement ? deleteModalElement.querySelectorAll('[data-bs-dismiss="modal"]') : [];
+  if (deleteDismissButtons.length) {
+    deleteDismissButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (deleteModal) {
+          deleteModal.hide();
+        }
+        cleanupDeleteModal();
+      });
     });
   }
   if (editModalElement) {
@@ -227,23 +252,19 @@ document.addEventListener('DOMContentLoaded', function() {
       if (passwordField) {
         passwordField.value = '';
       }
-      // Asegurar que no queden backdrops
-      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-        backdrop.remove();
-      });
-      // Restaurar scroll del body
-      document.body.classList.remove('modal-open');
-      document.body.style.paddingRight = '';
+      forceCleanBackdrops();
     });
   }
 
   // Agregar event listener específico para el botón cancelar del modal de editar
-  const cancelEditBtn = editModalElement ? editModalElement.querySelector('[data-bs-dismiss="modal"]') : null;
-  if (cancelEditBtn) {
-    cancelEditBtn.addEventListener('click', function() {
-      if (editModal) {
-        editModal.hide();
-      }
+  const editDismissButtons = editModalElement ? editModalElement.querySelectorAll('[data-bs-dismiss="modal"]') : [];
+  if (editDismissButtons.length) {
+    editDismissButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (editModal) {
+          editModal.hide();
+        }
+      });
     });
   }
 
@@ -318,5 +339,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Escape') {
       forceCleanBackdrops();
     }
+  });
+
+  document.addEventListener('hidden.bs.modal', function() {
+    forceCleanBackdrops();
   });
 });

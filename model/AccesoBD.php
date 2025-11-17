@@ -390,8 +390,11 @@ class AccesoBD
     function eliminarUsuario($id_usuario) {
         $id_usuario = (int)$id_usuario;
 
-        $sql = "DELETE FROM usuario WHERE id_usuario = $id_usuario";
+        // Primero eliminar los resultados asociados al usuario
+        $sqlResultados = "DELETE FROM resultado WHERE id_usuario = $id_usuario";
+        mysqli_query($this->conexion, $sqlResultados);
 
+        $sql = "DELETE FROM usuario WHERE id_usuario = $id_usuario";
         $resultado = mysqli_query($this->conexion, $sql);
 
         return $resultado !== false;
@@ -420,10 +423,34 @@ class AccesoBD
         return $historial; //devuelvo el array (puede estar vacío)
     }
 
+    // GLosario
+        public function obtenerGlosario() {
+            //el case funciona como un if, segun el valor de respuesta_correcta elige una de las tres opciones
+            $sql = "SELECT 
+                        termino_castellano, 
+                        CASE respuesta_correcta 
+                            WHEN 1 THEN opcion_euskera_1 
+                            WHEN 2 THEN opcion_euskera_2 
+                            WHEN 3 THEN opcion_euskera_3 
+                        END AS termino_euskera 
+                    FROM pregunta 
+                    WHERE activa = 1 
+                    GROUP BY termino_castellano, termino_euskera 
+                    ORDER BY termino_euskera ASC";
+            
+            $result = $this->lanzarSQL($sql);
+            $glosario = array();
+            
+            if ($result && mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $glosario[] = $row;
+                }
+            }
+            return $glosario;
+        }
 
 
-
-    //------------------- MÉTODOS PARA RANKING ------------------//
+    //Ranking
 
     //hago  el metodo de obtenerRankingCiclos: 
     //sumo los puntos de los alumnos por cada ciclo, cuento cuántos alumnos hay y los ordeno por puntos (de mayor a menor)

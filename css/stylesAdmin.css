@@ -1,26 +1,78 @@
 ul,li{list-style: none;}
 
+/* Tema Admin: variables de color */
+:root{
+  --primary-50: #BAE6FF;        /* Sky Blue Light */
+  --primary-500: #1CB0F6;       /* Sky Blue (Principal) */
+  --primary-700: #0E8AC9;       /* Sky Blue Dark */
+  --secondary-50: #E4B5FF;      /* Purple Light */
+  --secondary-500: #CE82FF;     /* Purple */
+  --secondary-700: #A85FF7;     /* Purple Dark */
+    /* Neutros para tipografía y bordes */
+    --neutral-900: #111827;
+    --neutral-700: #374151;
+    --neutral-500: #6B7280;
+    --neutral-300: #D1D5DB;
+    --neutral-200: #E5E7EB;
+    --neutral-100: #F3F4F6;
+  --game-green: #58CC02;        /* Correcto */
+  --game-orange: #FF9600;       /* Racha */
+  --game-red: #FF4B4B;          /* Error / Vida */
+  --game-gold: #FFC800;         /* Logro */
+  --surface-bg: #F5F8FE;        /* fondo páginas */
+    --text-on-dark: rgba(255,255,255,.95);
+    --text-on-soft: #1F2937;      /* texto sobre pasteles */
+    /* Pasteles más suaves */
+    --primary-soft-1: #E8F7FF;
+    --primary-soft-2: #CFEFFF;
+    --secondary-soft-1: #F6E8FF;
+    --secondary-soft-2: #EBD5FF;
+}
+
 body{
-    background-color: #d4d4d4;
+    background-color: var(--surface-bg);
+    color: var(--neutral-900);
 }
 header{
-    background-color: #3A4A61;
+    background-color: var(--primary-700);
 }
-.text-purple{ color: #6F42C1; }
-.text-green{ color: #198754; }
-.text-blue{ color: #0D6EFD; }
-.text-yellow{ color: #FFC107; }
+.text-purple{ color: var(--secondary-700); }
+.text-green{ color: var(--game-green); }
+.text-blue{ color: var(--primary-700); }
+.text-yellow{ color: var(--game-gold); }
+
+/* Enlaces coherentes con el tema */
+a{ color: var(--primary-700); }
+a:hover{ color: var(--primary-500); }
 
 /* Dashboard styles */
 .stat-card{
     border: none;
     border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(17,24,39,0.06), 0 1px 4px rgba(17,24,39,0.04);
 }
 
-.bg-gradient-purple{ background: linear-gradient(135deg,#e9d7ff 0%, #d6c5ff 100%); }
-.bg-gradient-blue{ background: linear-gradient(135deg,#cce7ff 0%, #b6e3ff 100%); }
+.bg-gradient-purple{ background: linear-gradient(135deg,var(--secondary-soft-1) 0%, var(--secondary-soft-2) 100%); }
+.bg-gradient-blue{ background: linear-gradient(135deg,var(--primary-soft-1) 0%, var(--primary-soft-2) 100%); }
 .bg-gradient-green{ background: linear-gradient(135deg,#d7f7e6 0%, #bff0d0 100%); }
 .bg-gradient-yellow{ background: linear-gradient(135deg,#fff4d0 0%, #ffe3a3 100%); }
+
+/* Alto contraste (pastel): texto oscuro sobre fondos suaves */
+.bg-gradient-blue,
+.bg-gradient-purple { color: var(--text-on-soft); }
+.bg-gradient-blue h1, .bg-gradient-blue h2, .bg-gradient-blue h3,
+.bg-gradient-blue h4, .bg-gradient-blue h5, .bg-gradient-blue h6,
+.bg-gradient-purple h1, .bg-gradient-purple h2, .bg-gradient-purple h3,
+.bg-gradient-purple h4, .bg-gradient-purple h5, .bg-gradient-purple h6 { color: var(--text-on-soft); }
+/* Neutralizar utilidades para mantener contraste */
+.bg-gradient-blue .text-blue,
+.bg-gradient-blue .text-purple,
+.bg-gradient-purple .text-blue,
+.bg-gradient-purple .text-purple { color: var(--text-on-soft) !important; }
+/* Enlaces e iconos en pasteles: usar primario oscuro para legibilidad */
+.bg-gradient-blue a, .bg-gradient-purple a { color: var(--primary-700); }
+.bg-gradient-blue .action-list a, .bg-gradient-purple .action-list a { color: var(--primary-700); opacity: .95; }
+.bg-gradient-blue .action-list a:hover, .bg-gradient-purple .action-list a:hover { opacity: 1; }
 
 
    /* Asegura que el wrapper muestre el gradiente y permita scroll horizontal */
@@ -34,9 +86,10 @@ table.bg-gradient-blue {
       background-color: transparent;
       color: inherit;
 }
-table.text-blue{
-    color: #0D6EFD;
-}
+/* superficies neutras reutilizables */
+.surface { background: #fff; border: 1px solid var(--neutral-200); border-radius: 12px; }
+.surface-alt { background: var(--neutral-100); border: 1px solid var(--neutral-200); border-radius: 12px; }
+table.text-blue{ color: var(--primary-500); }
 
 table.bg-gradient-blue th,
     table.bg-gradient-blue td {
@@ -72,9 +125,9 @@ table.bg-gradient-blue th,
 }*/
 
 .role-item{ padding: .8rem 1rem; }
-.bg-role-purple{ background: linear-gradient(90deg,#f3e8ff,#efe6ff); }
+.bg-role-purple{ background: linear-gradient(90deg,var(--secondary-50), #efe6ff); }
 .bg-role-green{ background: linear-gradient(90deg,#e6fff2,#dff7ec); }
-.bg-role-blue{ background: linear-gradient(90deg,#e9f7ff,#e6f3ff); }
+.bg-role-blue{ background: linear-gradient(90deg,var(--primary-50), #e6f3ff); }
 
 /* small adjustments to cards */
 .card { border-radius: 12px; }
@@ -97,16 +150,16 @@ table.bg-gradient-blue th,
     border-radius: 50px;
     transition: all 0.3s ease 0s;
 }
-.pagination li a:hover{
-    background-color: transparent;
-    border-color: rgba(255,255,255,0.2);
-}
+.pagination li a:hover{ background-color: transparent; border-color: rgba(0,0,0,0.08); }
+.bg-gradient-blue .pagination li a,
+.bg-gradient-purple .pagination li a { color: var(--text-on-dark); border-color: transparent; }
+.bg-gradient-blue .pagination li.active a,
+.bg-gradient-purple .pagination li.active a { border-color: rgba(255,255,255,.3); }
 .pagination li a:focus,
 .pagination li.active a,
 .pagination li.active a:hover{
- 
     background-color: transparent;
-    border-color: #0a57ca;
+    border-color: var(--primary-700);
 }
 .pagination li:first-child a,
 .pagination li:last-child a{
@@ -134,7 +187,7 @@ table.bg-gradient-blue th,
   bottom: 6px;
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg,#7fb3ff,#2b6fd6);
+    background: linear-gradient(90deg,var(--primary-50), var(--primary-500));
   border-radius: 2px;
   transform: translateX(-50%);
   transition: width .18s ease;
@@ -143,6 +196,7 @@ table.bg-gradient-blue th,
 .table td {
     text-align: center;
     vertical-align: middle;
+    border-color: var(--neutral-200) !important;
 }
 
 /* Keep specific widths for better layout */
@@ -156,21 +210,37 @@ table.bg-gradient-blue th,
 }
 
 /* Modal fixes para prevenir backdrops residuales */
-.modal-backdrop.show {
-    opacity: 0.5;
-}
+.modal-backdrop.show { opacity: 0.5; }
 
 /* Asegurar que los modals se cierren correctamente */
-body.modal-open {
-    overflow: hidden;
-}
+body.modal-open { overflow: hidden; }
 
-body:not(.modal-open) {
-    overflow: auto !important;
-    padding-right: 0 !important;
-}
+body:not(.modal-open) { overflow: auto !important; padding-right: 0 !important; }
 
 /* Eliminar cualquier backdrop huérfano */
-.modal-backdrop:not(.show) {
-    display: none !important;
+.modal-backdrop:not(.show) { display: none !important; }
+
+/* Botones coherentes con la paleta */
+.btn-primary{
+    background-color: var(--primary-500);
+    border-color: var(--primary-500);
 }
+.btn-primary:hover{
+    background-color: var(--primary-700);
+    border-color: var(--primary-700);
+}
+.btn-secondary{
+    background-color: var(--neutral-100);
+    color: var(--neutral-900);
+    border-color: var(--neutral-200);
+}
+.btn-secondary:hover{
+    background-color: var(--neutral-200);
+    color: var(--neutral-900);
+}
+
+/* Badges (gamificación) suavizados pero legibles */
+.badge.bg-success{ background-color: rgba(88,204,2,.15) !important; color: #2F7A00 !important; }
+.badge.bg-danger{ background-color: rgba(255,75,75,.18) !important; color: #9A1E1E !important; }
+.badge.bg-warning{ background-color: rgba(255,200,0,.18) !important; color: #8A6C00 !important; }
+.badge.bg-info{ background-color: rgba(28,176,246,.18) !important; color: var(--primary-700) !important; }
